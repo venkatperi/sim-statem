@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css?family=Share+Tech+Mono|News+Cycle|Lato');
+@import 'variables';
+@import '../../node_modules/toastr/toastr';
+
+html,
+body {
+  font-family: 'Share Tech Mono', serif;
+  height: 100%;
+}
+
+body {
+  color: $text-color;
+  width: 100%;
+  background-color: #ddd;
+}
+
+#content {
+  height: 100%;
+}
+
+a, a.icon {
+  &:hover, &:focus {
+    color: magenta;
+    text-decoration: none;
+  }
+}
+
+a.icon {
+  color: $icon-color;
+  line-height: 27px;
+  padding: 0 5px;
+}
+
