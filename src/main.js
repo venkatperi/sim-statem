@@ -12,6 +12,9 @@ import AppMenu from 'components/AppMenu'
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
+import vSelect from 'vue-select'
+
+Vue.component('v-select', vSelect)
 
 library.add( faGithub, faWikipediaW, faLink )
 Vue.component( 'font-awesome-icon', FontAwesomeIcon )

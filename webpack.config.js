@@ -11,15 +11,20 @@ const isProduction = process.env.NODE_ENV === 'production'
 module.exports = {
   mode: isProduction ? 'production' : 'development',
   entry: './src/main.js',
+
   output: {
     path: path.resolve( __dirname, './dist' ),
     publicPath: '/',
     filename: isProduction ? '[name].[chunkhash].js' : '[name].js',
   },
-  node: {
-  },
+
   module: {
     rules: [
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        exclude: /node_modules/,
+      },
       {
         test: /\.tsx?$/,
         loader: 'awesome-typescript-loader',

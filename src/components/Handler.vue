@@ -1,52 +1,53 @@
 <template>
   <div :class="[odd?'odd':'even', 'handler-group', 'list-group-item']">
-    <div class="index" v-html="index + 1"></div>
-    <div class="controls">x</div>
-    <div class="route">
-      <input class="event ace-monokai" v-model="event" />
-      <span class="hash">#</span>
-      <input class="context ace-monokai" v-model="context" />
-      <span class="hash">#</span>
-      <input class="state ace-monokai" v-model="state" />
+    <div class="top">
+      <div class="index" v-html="index + 1"></div>
+      <div class="controls">x</div>
     </div>
-    <AceEditor
-      class="handler"
-      :name="name"
-      :fontSize="fontSize"
-      :mode="mode"
-      :minLines="minLines"
-      :maxLines="maxLines"
-      :editorProps="editorProps()"
-      :onChange="e => this.handler = e"
-      :value="handler"
-      theme="monokai"></AceEditor>
+    <div class="route">
+      <input class="event ace-monokai"
+        v-model="event"
+        placeholder="event" />
+      <span class="hash">#</span>
+      <input class="context ace-monokai"
+        v-model="context"
+        placeholder="context" />
+      <span class="hash">#</span>
+      <input class="state ace-monokai"
+        v-model="state"
+        placeholder="state" />
+    </div>
+    <textarea
+      v-model="handler"
+      placeholder="handler"
+      v-resize-on-value
+      v-resize-on-input
+      :class="['handler' ]">
+      </textarea>
   </div>
 </template>
 
 <script>
-  const HANDLER = /\[([^,]+),(.*)]/
-  // import {Ace as AceEditor} from 'vue2-brace-editor';
-  import {Ace as AceEditor} from '../../../vue2-brace-editor/src/index';
-  import editorProps from './editorProps'
+  import VueResizeOnEvent from 'vue-resize-on-event'
 
-  const uniqid = require( 'uniqid' )
+  const HANDLER = /\[([^,]+),(.*)]/
 
   export default {
     name: 'Handler',
 
-    components: {
-      AceEditor,
-    },
+    mixins: [
+      VueResizeOnEvent( 'value' ),
+      VueResizeOnEvent( 'input' ),
+    ],
 
-    props: Object.assign( {}, editorProps, {
+    props: {
       value: String,
       index: Number,
       odd: { type: Boolean, default: false },
-    } ),
+    },
 
     data: function () {
       return {
-        name: uniqid(),
         event: '',
         context: '',
         state: '',
@@ -108,11 +109,6 @@
         this.$emit( 'input', value )
       },
 
-      editorProps() {
-        return {
-          $blockScrolling: Infinity,
-        }
-      },
     },
   }
 </script>
@@ -120,53 +116,80 @@
 <style type="scss" scoped>
 
   .route {
+    margin-top: 6px;
     margin-bottom: 6px;
+    width: 100%;
+    display: flex;
   }
 
   .event, .context, .state {
-    width: 120px;
+    height: 30px;
     font-size: 16px;
-    padding: 0 10px;
+    text-align: center;
+    background-color: #272822;
+    color: #F8F8F2;
+  }
+
+  .event, .state {
+    width: 100px;
   }
 
   .context {
-    width: 195px;
+    flex-grow: 1;
   }
 
   .hash {
-    font-size: 28px;
-    color: #888;
+    font-size: 20px;
+    line-height: 30px;
+    color: #777;
+    font-weight: 200;
+    width: 30px;
+    text-align: center;
+    background: #000;
+    border-left: solid 1px #333;
+    border-right: solid 1px #333;
   }
 
-  .handler {
-    width: 400px;
+  textarea.handler {
+    width: 100%;
+    resize: none;
+    background-color: #272822;
+    color: #F8F8F2;
+    border: none;
+    border-radius: 0;
+    padding: 10px;
   }
 
   .handler-group {
-    padding: 10px 0 20px 20px;
-    width: 540px;
+    padding: 10px 15px 15px;
+    width: auto;
+    height: auto;
     position: relative;
   }
 
   .odd {
+    color: #222;
     background: #aaa;
   }
 
   .even {
+    color: #444;
     background: #ccc;
   }
 
-  .index {
+  .top {
+    height: 20px;
+  }
+
+  .index, .controls {
     font-size: 18px;
-    color: #808080;
-    font-weight: bold;
-    line-height: 14px;
+    line-height: 18px;
+    float: left;
   }
 
   .controls {
-    position: absolute;
-    right: 20px;
-    top: 2px;
+    float: right;
   }
+
 
 </style>
