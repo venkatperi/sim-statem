@@ -1,9 +1,9 @@
 <template>
   <div class="app">
-    <button v-on:click="run()">Run</button>
     <div class="row">
       <div class="col">
-        <div class="handlers list-group" ref="handlers">
+        <label for="handlers">Rules</label>
+        <div class="handlers list-group" id="handlers" ref="handlers">
           <Handler class="handler"
             v-for="h in sortedHandlers"
             :key="h.id"
@@ -11,18 +11,9 @@
             :odd="h.index%2 === 1"
             v-model="h.handler"></Handler>
         </div>
-        <button v-on:click="addHandler()">Add Handler</button>
+        <button v-on:click="addHandler()">+</button>
       </div>
       <div class="col">
-        <label for="events">Events</label>
-        <textarea
-          v-model="events"
-          id="events"
-          placeholder="Events"
-          v-resize-on-value
-          v-resize-on-input
-          :class="['events' ]">
-        </textarea>
 
         <label for="initialData">Initial Data</label>
         <textarea
@@ -34,16 +25,33 @@
           :class="['initialData' ]">
         </textarea>
 
-        <label for="output">Output</label>
+        <label for="events">Events</label>
         <textarea
-          v-model="output"
-          readonly
-          id="output"
-          placeholder="Output"
+          v-model="events"
+          id="events"
+          placeholder="Events"
           v-resize-on-value
           v-resize-on-input
-          :class="['output' ]">
+          :class="['events' ]">
         </textarea>
+
+        <div class="controls">
+          <button v-on:click="run()">Run</button>
+        </div>
+
+        <label for="transitions">State Transitions</label>
+        <div id="transitions">
+          <Transition
+            class="transition"
+            v-for="(t, index) in transitions"
+            :key="index"
+            :state="t.state"
+            :prev="t.prev"
+            :event="t.event"
+            :route="t.event?t.event.toRoute(t.prev || t.state):'<initial>'"
+          ></Transition>
+        </div>
+
 
       </div>
     </div>
@@ -52,22 +60,24 @@
 
 <script lang="ts">
     import { Component, Lifecycle } from "av-ts";
-    import { State } from "gen-statem";
+    import { Event, State } from "gen-statem";
     import { SortableEvent } from "sortablejs";
     import Vue from 'vue';
     import VueResizeOnEvent from '../../../vue-resize-on-event/src/VueResizeOnEvent'
     import sm from '../templates/sm'
+    import { HandlerType, StateTransition } from "../types";
     import Handler from './Handler.vue';
+    import Transition from "./Transition";
 
     const vm = require('vm')
     const Sortable = require('sortablejs')
     const genStatem = require('gen-statem')
     const uniqid = require('uniqid')
-    const inspect = require('object-inspect')
 
     @Component({
         name: 'App',
         components: {
+            Transition,
             Handler
         },
         directives: {
@@ -76,7 +86,7 @@
         }
     })
     export default class App extends Vue {
-        handlers: { id: string; index: number; handler: string }[] = [
+        handlers: Array<HandlerType> = [
             {
                 id: uniqid(),
                 index: 0,
@@ -96,6 +106,8 @@
         initialState = 'off'
 
         output = ''
+
+        transitions: Array<StateTransition> = []
 
         counter = 1
 
@@ -119,17 +131,10 @@
             return this.handlers.sort((a, b) => a.index - b.index)
         }
 
-
         get handlerCode() {
-            return '[' + this.sortedHandlers.map(x => x.handler).join(',') + ']'
-        }
-
-        onInitialDataChanged(value: string) {
-            this.initialData = value
-        }
-
-        onEventsChanged(value: string) {
-            this.events = value
+            return '['
+                + this.sortedHandlers.map(x => x.handler).join(',')
+                + ']'
         }
 
         addHandler() {
@@ -143,6 +148,7 @@
         reset() {
             this.counter = 0
             this.output = ''
+            this.transitions = []
         }
 
         run() {
@@ -157,27 +163,17 @@
 
             vm.runInThisContext(code)({
                 genStatem,
-                afterEvent: (fn: string, args: Array<any>, status: [State, any]) => {
-                    let prompt = `${this.counter++}>`
-                    let a = args.length === 0 ? '' : inspect(...args)
-                    let res = [prompt,
-                        `${fn}(${a})`,
-                        `state:'${status[0]}',`,
-                        `data:${inspect(status[1])}`,
-                    ]
-                    this.output += res.join(' ') + '\n'
+
+                onState: (state: State, prev: State, data: any, event: Event) => {
+                    this.transitions.push({state, prev, data, event})
                 },
-                step: true,
+
             })
         }
     }
 </script>
 
-<style lang="scss">
-  #handlers {
-    width: 100%;
-    height: 100%;
-  }
+<style lang="scss" scoped>
 
   .events, .initialData, .output {
     width: 100%;
@@ -186,19 +182,41 @@
     color: #F8F8F2;
     border: none;
     border-radius: 0;
-    padding: 10px;
+    padding: 10px 20px;
   }
 
-  .output {
-    height: 100%;
+  .initialData {
+    margin-bottom: 10px;
   }
 
-  .handlers {
-    margin: 10px 0;
+  #transitions {
+    background-color: #272822;
+    min-height: 75px;
+    width: 100%;
   }
 
-  .handler {
-    /*border-top: solid 1px #888;*/
+  .transition {
+  }
+
+  label {
+    width: 100%;
+    background: #444;
+    display: block;
+    height: 34px;
+    line-height: 34px;
+    padding: 0 20px ;
+    color: #ccc;
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .controls {
+  }
+
+  button {
+    font-size: 18px;
+    padding: 5px 15px;
+    margin: 10px 0 15px;
   }
 
 

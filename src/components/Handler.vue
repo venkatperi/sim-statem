@@ -72,9 +72,7 @@
         });
 
         @Prop
-        index = p({
-            type: Number
-        });
+        index = p({type: Number})
 
         @Prop
         odd = p({
@@ -139,10 +137,10 @@
 
 <style type="scss" scoped>
   .route {
-    margin-top: 6px;
-    margin-bottom: 6px;
+    margin-top: 0px;
     width: 100%;
     display: flex;
+    border-bottom: solid 1px #444;
   }
 
   input {
@@ -156,16 +154,18 @@
   .event,
   .context,
   .state {
-    height: 30px;
-    font-size: 16px;
+    height: 32px;
+    line-height: 32px;
+    font-size: 17px;
     text-align: center;
     background-color: #272822;
-    color: #f8f8f2;
+    color: #bbb;
   }
 
   .event,
   .state {
     width: 100px;
+    flex: 1;
   }
 
   .context {
@@ -174,28 +174,28 @@
 
   .hash {
     font-size: 20px;
-    line-height: 30px;
+    line-height: 32px;
     color: #777;
     font-weight: 200;
     width: 30px;
     text-align: center;
     background: #000;
-    border-left: solid 1px #333;
-    border-right: solid 1px #333;
+    border-left: solid 1px #444;
+    border-right: solid 1px #444;
   }
 
   textarea.handler {
     width: 100%;
     resize: none;
     background-color: #272822;
-    color: #f8f8f2;
+    color: #bbb;
     border: none;
     border-radius: 0;
-    padding: 10px;
+    padding: 10px 20px;
   }
 
   .handler-group {
-    padding: 10px 15px 15px;
+    padding: 5px 15px 5px;
     width: auto;
     height: auto;
     position: relative;

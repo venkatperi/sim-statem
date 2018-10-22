@@ -1,9 +1,10 @@
 function createSM(opts: { [key: string]: string }) {
     return `
-  ({genStatem, step, afterEvent, onState} ) => {
+  ({genStatem, step, afterEvent, onState, onError} ) => {
   const { StateMachine, nextState, keepState, repeatState } = genStatem;
   afterEvent = afterEvent || function() {} 
   onState = onState || function() {} 
+  onError = onError || console.warn
   
   const sm = new StateMachine( {
     handlers: ${opts.handlers},
@@ -18,7 +19,7 @@ function createSM(opts: { [key: string]: string }) {
           .then(() => fn(...args))
           .then(() => step ? sm.getStateAndData() : undefined)
           .then((status) => afterEvent(name, args, status))
-          .catch(console.warn)
+          .catch(onError)
      }
   }
   exec(()=>{}, 'initial')()
