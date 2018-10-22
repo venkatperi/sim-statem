@@ -50,128 +50,127 @@
   </div>
 </template>
 
-<script>
-  const genStatem = require( 'gen-statem' )
-  const inspect = require( 'object-inspect' );
+<script lang="ts">
+    import { Component, Lifecycle } from "av-ts";
+    import { State } from "gen-statem";
+    import { SortableEvent } from "sortablejs";
+    import Vue from 'vue';
+    import VueResizeOnEvent from '../../../vue-resize-on-event/src/VueResizeOnEvent'
+    import sm from '../templates/sm'
+    import Handler from './Handler.vue';
 
-  import Sortable from 'sortablejs'
-  import VueResizeOnEvent from 'vue-resize-on-event'
-  import sm from '../templates/sm'
-  import Handler from './Handler';
+    const vm = require('vm')
+    const Sortable = require('sortablejs')
+    const genStatem = require('gen-statem')
+    const uniqid = require('uniqid')
+    const inspect = require('object-inspect')
 
-  const vm = require( 'vm' );
-  const uniqid = require( 'uniqid' )
-
-  export default {
-    name: 'app',
-
-    props: {},
-
-    components: {
-      Handler,
-    },
-
-    mixins: [
-      VueResizeOnEvent( 'value' ),
-      VueResizeOnEvent( 'input' ),
-    ],
-
-    data: function () {
-      return {
-        handlers: [
-          {
-            id: uniqid(),
-            index: 0,
-            handler: '[\'cast#flip#off\', \'on\']',
-          },
-          {
-            id: uniqid(),
-            index: 1,
-            handler: '[\'cast#flip#on\', \'off\']',
-          },
-        ],
-        events: 'cast(\'flip\')',
-        initialData: '{}',
-        initialState: 'off',
-        output: '',
-        counter: 1,
-      };
-    },
-
-    mounted() {
-      new Sortable( this.$refs.handlers, {
-        onEnd: ( e ) => {
-          let a = this.handlers.find( x => x.index === e.oldIndex )
-          let b = this.handlers.find( x => x.index === e.newIndex )
-          if ( a && b ) {
-            let x = a.index
-            a.index = b.index
-            b.index = x
-          }
+    @Component({
+        name: 'App',
+        components: {
+            Handler
         },
-      } )
-    },
+        directives: {
+            ...VueResizeOnEvent('value'),
+            ...VueResizeOnEvent('input'),
+        }
+    })
+    export default class App extends Vue {
+        handlers: { id: string; index: number; handler: string }[] = [
+            {
+                id: uniqid(),
+                index: 0,
+                handler: '[\'cast#flip#off\', \'on\']',
+            },
+            {
+                id: uniqid(),
+                index: 1,
+                handler: '[\'cast#flip#on\', \'off\']',
+            },
+        ]
 
-    watch: {},
+        events = 'cast(\'flip\')'
 
-    computed: {
-      sortedHandlers: function () {
-        return this.handlers.sort( ( a, b ) => a.index - b.index )
-      },
+        initialData = '{}'
 
-      handlerCode: function () {
-        return '[' + this.sortedHandlers.map( x => x.handler ).join( ',' ) + ']'
-      },
-    },
+        initialState = 'off'
 
-    methods: {
-      onInitialDataChanged( value ) {
-        this.initialData = value
-      },
+        output = ''
 
-      onEventsChanged( value ) {
-        this.events = value
-      },
+        counter = 1
 
-      addHandler() {
-        this.handlers.push( {
-          index: this.handlers.length,
-          handler: '[\'cast#*_#*_\', \'<state>\']',
-        } )
-      },
+        $refs!: { handlers: HTMLElement }
 
-      reset() {
-        this.counter = 0
-        this.output = ''
-      },
+        @Lifecycle mounted() {
+            new Sortable(this.$refs.handlers, {
+                onEnd: (e: SortableEvent) => {
+                    let a = this.handlers.find(x => x.index === e.oldIndex)
+                    let b = this.handlers.find(x => x.index === e.newIndex)
+                    if (a && b) {
+                        let x = a.index
+                        a.index = b.index
+                        b.index = x
+                    }
+                },
+            })
+        }
 
-      run() {
-        const code = sm( {
-          handlers: this.handlerCode,
-          initialData: this.initialData,
-          initialState: this.initialState,
-          events: this.events,
-        } )
+        get sortedHandlers() {
+            return this.handlers.sort((a, b) => a.index - b.index)
+        }
 
-        this.reset()
 
-        vm.runInThisContext( code )( {
-          genStatem,
-          afterEvent: ( fn, args, status ) => {
-            let prompt = `${this.counter++}>`
-            let a = args.length === 0 ? '' : inspect(...args)
-            let res = [prompt,
-              `${fn}(${a})`,
-              `state:'${status[0]}',`,
-              `data:${inspect( status[1] )}`,
-            ]
-            this.output += res.join( ' ' ) + '\n'
-          },
-          step: true,
-        } )
-      },
-    },
-  };
+        get handlerCode() {
+            return '[' + this.sortedHandlers.map(x => x.handler).join(',') + ']'
+        }
+
+        onInitialDataChanged(value: string) {
+            this.initialData = value
+        }
+
+        onEventsChanged(value: string) {
+            this.events = value
+        }
+
+        addHandler() {
+            this.handlers.push({
+                id: uniqid(),
+                index: this.handlers.length,
+                handler: '[\'cast#*_#*_\', \'<state>\']',
+            })
+        }
+
+        reset() {
+            this.counter = 0
+            this.output = ''
+        }
+
+        run() {
+            const code = sm({
+                handlers: this.handlerCode,
+                initialData: this.initialData,
+                initialState: this.initialState,
+                events: this.events,
+            })
+
+            this.reset()
+
+            vm.runInThisContext(code)({
+                genStatem,
+                afterEvent: (fn: string, args: Array<any>, status: [State, any]) => {
+                    let prompt = `${this.counter++}>`
+                    let a = args.length === 0 ? '' : inspect(...args)
+                    let res = [prompt,
+                        `${fn}(${a})`,
+                        `state:'${status[0]}',`,
+                        `data:${inspect(status[1])}`,
+                    ]
+                    this.output += res.join(' ') + '\n'
+                },
+                step: true,
+            })
+        }
+    }
 </script>
 
 <style lang="scss">

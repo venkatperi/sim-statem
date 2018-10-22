@@ -1,5 +1,5 @@
-function createSM( opts ) {
-  return `
+function createSM(opts: { [key: string]: string }) {
+    return `
   ({genStatem, step, afterEvent, onState} ) => {
   const { StateMachine, nextState, keepState, repeatState } = genStatem;
   afterEvent = afterEvent || function() {} 
@@ -29,14 +29,15 @@ function createSM( opts ) {
   
   ${opts.events}
 }
-`
+`;
 }
 
-export default (( opts ) => {
-  const res = []
-  res.push( createSM( opts ) )
 
-  return res.join( '\n' )
-})
+export default (opts: { [key: string]: string }): string => {
+    const res = [];
+    res.push(createSM(opts));
+
+    return res.join("\n");
+}
 
 

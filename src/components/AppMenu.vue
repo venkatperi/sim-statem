@@ -14,7 +14,7 @@
 </template>
 
 <script>
-  import GithubLogo from 'images/github.svg';
+  import GithubLogo from '../images/github.svg';
 
   export default {
     name: 'app-menu',

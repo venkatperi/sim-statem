@@ -1,19 +1,19 @@
 <template>
   <div :class="[odd?'odd':'even', 'handler-group', 'list-group-item']">
-    <div class="top">
+    <div class="controls-area">
       <div class="index" v-html="index + 1"></div>
       <div class="controls">x</div>
     </div>
     <div class="route">
-      <input class="event ace-monokai"
+      <input :class="['event', eventValid?'':'error']"
         v-model="event"
         placeholder="event" />
       <span class="hash">#</span>
-      <input class="context ace-monokai"
+      <input class="context "
         v-model="context"
         placeholder="context" />
       <span class="hash">#</span>
-      <input class="state ace-monokai"
+      <input class="state "
         v-model="state"
         placeholder="state" />
     </div>
@@ -27,94 +27,117 @@
   </div>
 </template>
 
-<script>
-  import VueResizeOnEvent from 'vue-resize-on-event'
+<script lang="ts">
+    import { Component, Lifecycle, p, Prop, Watch } from "av-ts";
+    import Vue from "vue";
+    import VueResizeOnEvent from "../../../vue-resize-on-event/src/VueResizeOnEvent";
 
-  const HANDLER = /\[([^,]+),(.*)]/
+    const HANDLER: RegExp = /\[([^,]+),(.*)]/;
 
-  export default {
-    name: 'Handler',
+    const events: string[] = [
+        "cast",
+        "eventTimeout",
+        "stateTimeout",
+        "genericTimeout",
+        "enter",
+        "internal"
+    ];
 
-    mixins: [
-      VueResizeOnEvent( 'value' ),
-      VueResizeOnEvent( 'input' ),
-    ],
+    const validateEvent = (e: string) => {
+        return events.indexOf(e) >= 0 || e.startsWith("call");
+    };
 
-    props: {
-      value: String,
-      index: Number,
-      odd: { type: Boolean, default: false },
-    },
-
-    data: function () {
-      return {
-        event: '',
-        context: '',
-        state: '',
-        route: '',
-        handler: '',
-      }
-    },
-
-    created() {
-      this.valueChanged()
-    },
-
-    watch: {
-      value() {
-        this.valueChanged()
-      },
-
-      event() {
-        this.updateRoute()
-      },
-
-      context() {
-        this.updateRoute()
-      },
-
-      state() {
-        this.updateRoute()
-      },
-
-      route() {
-        this.emitHandler()
-      },
-
-      handler( v ) {
-        this.emitHandler()
-      },
-    },
-
-    methods: {
-      updateRoute() {
-        this.route = '"' + [this.event, this.context, this.state].join( '#' ) + '"'
-      },
-
-      valueChanged() {
-        let match = HANDLER.exec( this.value )
-        if ( match && match.length > 1 ) {
-          this.handler = match[2].trim()
-
-          let route = match[1].replace( /['"]/g, '' ).trim()
-          let parts = route.split( '#' )
-          this.event = parts[0]
-          this.context = parts[1]
-          this.state = parts[2]
+    @Component({
+        name: "Handler",
+        directives: {
+            ...VueResizeOnEvent("value"),
+            ...VueResizeOnEvent("input")
         }
-      },
+    })
+    export default class Handler extends Vue {
+        event = "";
 
-      emitHandler: function () {
-        const value = `[${this.route}, ${this.handler}]`
-        this.$emit( 'input', value )
-      },
+        context = "";
 
-    },
-  }
+        state = "";
+
+        route = "";
+
+        handler = "";
+
+        @Prop
+        value = p({
+            type: String,
+            default: ""
+        });
+
+        @Prop
+        index = p({
+            type: Number
+        });
+
+        @Prop
+        odd = p({
+            type: Boolean,
+            default: false
+        });
+
+        @Lifecycle
+        created() {
+            this.valueChanged();
+        }
+
+        @Watch("value")
+        watchValue() {
+            this.valueChanged();
+        }
+
+        @Watch("event")
+        watchEvent() {
+            this.updateRoute();
+        }
+
+        @Watch("route")
+        watchRoute() {
+            this.emitHandler();
+        }
+
+        @Watch("handler")
+        watchHandler() {
+            this.emitHandler();
+        }
+
+        get eventValid(): boolean {
+            return validateEvent(this.event)
+        }
+
+        updateRoute() {
+            this.route = "\""
+                + [this.event, this.context, this.state].join("#")
+                + "\"";
+        }
+
+        valueChanged(): void {
+            let match = HANDLER.exec(this.value);
+            if (match && match.length >= 3) {
+                this.handler = match[2].trimLeft();
+
+                let route = match[1].replace(/['"]/g, "").trim();
+                let parts = route.split("#");
+                this.event = parts[0];
+                this.context = parts[1];
+                this.state = parts[2];
+            }
+        }
+
+        emitHandler() {
+            const value = `[${this.route}, ${this.handler}]`;
+            this.$emit("input", value);
+        }
+    }
 </script>
 
 <style type="scss" scoped>
-
   .route {
     margin-top: 6px;
     margin-bottom: 6px;
@@ -122,15 +145,26 @@
     display: flex;
   }
 
-  .event, .context, .state {
+  input {
+    border: solid 1px #272822;
+  }
+
+  input.error {
+    border: solid 1px red;
+  }
+
+  .event,
+  .context,
+  .state {
     height: 30px;
     font-size: 16px;
     text-align: center;
     background-color: #272822;
-    color: #F8F8F2;
+    color: #f8f8f2;
   }
 
-  .event, .state {
+  .event,
+  .state {
     width: 100px;
   }
 
@@ -154,7 +188,7 @@
     width: 100%;
     resize: none;
     background-color: #272822;
-    color: #F8F8F2;
+    color: #f8f8f2;
     border: none;
     border-radius: 0;
     padding: 10px;
@@ -177,11 +211,12 @@
     background: #ccc;
   }
 
-  .top {
+  .controls-area {
     height: 20px;
   }
 
-  .index, .controls {
+  .index,
+  .controls {
     font-size: 18px;
     line-height: 18px;
     float: left;
@@ -190,6 +225,4 @@
   .controls {
     float: right;
   }
-
-
 </style>
