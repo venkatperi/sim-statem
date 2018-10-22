@@ -2,13 +2,14 @@
   <div class="app">
     <div class="row">
       <div class="col">
-        <label for="handlers">Rules</label>
+        <label for="handlers">State Machine Rules</label>
         <div class="handlers list-group" id="handlers" ref="handlers">
           <Handler class="handler"
             v-for="h in sortedHandlers"
             :key="h.id"
             :index="h.index"
             :odd="h.index%2 === 1"
+            v-on:remove="removeHandler(h.index)"
             v-model="h.handler"></Handler>
         </div>
         <button v-on:click="addHandler()">+</button>
@@ -137,6 +138,15 @@
                 + ']'
         }
 
+        removeHandler(index: number) {
+            this.handlers.splice(index, 1)
+            this.reindex()
+        }
+
+        reindex() {
+            this.handlers.forEach((h, i) => h.index = i)
+        }
+
         addHandler() {
             this.handlers.push({
                 id: uniqid(),
@@ -204,10 +214,11 @@
     display: block;
     height: 34px;
     line-height: 34px;
-    padding: 0 20px ;
+    padding: 0 20px;
     color: #ccc;
     margin: 0;
     font-size: 18px;
+    border-bottom: solid 1px #888;
   }
 
   .controls {

@@ -1,6 +1,6 @@
 <template> <div class="container-fluid menu p-0 mt-2 mb-4"> <div class="row">
       <div class="brand col-auto float-left align-middle">
-        <p>Vue Flickr Search</p>
+        <p>gen-statem State Machine Simulator</p>
       </div>
 
       <div class="col icon2 float-right text-right">

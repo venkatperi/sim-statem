@@ -2,7 +2,7 @@
   <div :class="[odd?'odd':'even', 'handler-group', 'list-group-item']">
     <div class="controls-area">
       <div class="index" v-html="index + 1"></div>
-      <div class="controls">x</div>
+      <div class="close" @click="$emit('remove')">x</div>
     </div>
     <div class="route">
       <input :class="['event', eventValid?'':'error']"
@@ -137,7 +137,7 @@
 
 <style type="scss" scoped>
   .route {
-    margin-top: 0px;
+    margin-top: 0;
     width: 100%;
     display: flex;
     border-bottom: solid 1px #444;
@@ -165,7 +165,6 @@
   .event,
   .state {
     width: 100px;
-    flex: 1;
   }
 
   .context {
@@ -195,34 +194,37 @@
   }
 
   .handler-group {
-    padding: 5px 15px 5px;
+    padding: 0;
     width: auto;
     height: auto;
-    position: relative;
+    border: none;
+    border-radius: 0;
   }
 
-  .odd {
+  .oddx {
     color: #222;
     background: #aaa;
   }
 
-  .even {
-    color: #444;
-    background: #ccc;
+  .even, .odd {
+    color: #222;
+    background: #bbb;
   }
 
   .controls-area {
-    height: 20px;
+    height: 25px;
+    padding: 0 10px;
+    line-height: 20px;
+    margin-top: 5px;
   }
 
   .index,
   .controls {
-    font-size: 18px;
-    line-height: 18px;
+    font-size: 22px;
     float: left;
   }
 
-  .controls {
+  .close {
     float: right;
   }
 </style>
