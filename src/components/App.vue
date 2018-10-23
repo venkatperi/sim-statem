@@ -46,14 +46,11 @@
         </textarea>
 
         <div class="header">Events</div>
-        <textarea
+        <CodeEditor
           v-model="events"
           id="events"
           placeholder="Events"
-          v-resize-on-value
-          v-resize-on-input
-          :class="['events' ]">
-        </textarea>
+          class="events" />
 
         <div class="controls">
           <button v-on:click="run()">Run</button>
@@ -87,6 +84,7 @@
     import VueResizeOnEvent from '../../../vue-resize-on-event/src/VueResizeOnEvent'
     import sm from '../templates/sm'
     import { HandlerType, StateTransition } from "../types";
+    import CodeEditor from "./CodeEditor";
     import Handler from './Handler.vue';
     import Transition from "./Transition";
 
@@ -99,7 +97,8 @@
         name: 'App',
         components: {
             Transition,
-            Handler
+            Handler,
+            CodeEditor
         },
         directives: {
             ...VueResizeOnEvent('value'),
@@ -219,9 +218,15 @@
     resize: none;
     background-color: $code_bg;
     color: $text_color;
-    border: none;
-    border-radius: 0;
+    border: solid 1px $bg_color;
+    border-top: solid 4px $bg_color;
+    border-top-left-radius: 15px;
     padding: 10px 20px;
+    &:focus {
+      border: solid 1px $highlight_color;
+      border-top: solid 4px $highlight_color;
+      box-shadow: inset 0 0 15px $highlight_color;
+    }
   }
 
   .initialData {

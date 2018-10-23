@@ -162,13 +162,19 @@
 <style type="scss" scoped>
   @import '../styles/theme';
 
-  $bg_color: lighten($dark, 10%);
-
-  input, textarea {
+  input {
     border: solid 1px $bg_color;
     &:focus {
       border: solid 1px $highlight_color;
-      box-shadow: inset 0 0 7px $highlight_color;
+      box-shadow: inset 0 0 6px $highlight_color;
+    }
+  }
+
+  textarea {
+    border: solid 2px $bg_color;
+    &:focus {
+      border: solid 2px $highlight_color;
+      box-shadow: inset 0 0 15px $highlight_color;
     }
   }
 
@@ -219,7 +225,7 @@
     resize: none;
     background-color: $code_bg;
     color: $text_color;
-    border-radius: 0;
+    border-top-left-radius: 15px;
     padding: 10px 20px;
   }
 
