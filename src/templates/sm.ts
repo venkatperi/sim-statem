@@ -8,7 +8,7 @@ function createSM(opts: { [key: string]: string }) {
   
   const sm = new StateMachine( {
     handlers: ${opts.handlers},
-    initialState: '${opts.initialState}',
+    initialState: ${opts.initialState},
     initialData: ${opts.initialData},
   } )
   

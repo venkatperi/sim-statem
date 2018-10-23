@@ -35,22 +35,33 @@
         </div>
       </div>
       <div class="col">
+
+        <div class="header">Initial State</div>
+        <CodeMirror
+          v-model="initialState"
+          name="initialData"
+          mode="javascript"
+          theme="midnight"
+          :lineNumbers="true"
+        />
+
         <div class="header">Initial Data</div>
-        <textarea
+        <CodeMirror
           v-model="initialData"
-          id="initialData"
-          placeholder="Initial Data"
-          v-resize-on-value
-          v-resize-on-input
-          :class="['initialData' ]">
-        </textarea>
+          name="initialData"
+          mode="javascript"
+          theme="midnight"
+          :lineNumbers="true"
+        />
 
         <div class="header">Events</div>
-        <CodeEditor
+        <CodeMirror
           v-model="events"
-          id="events"
-          placeholder="Events"
-          class="events" />
+          mode="javascript"
+          theme="midnight"
+          :lineNumbers="true"
+          name="events"
+        />
 
         <div class="controls">
           <button v-on:click="run()">Run</button>
@@ -85,6 +96,7 @@
     import sm from '../templates/sm'
     import { HandlerType, StateTransition } from "../types";
     import CodeEditor from "./CodeEditor";
+    import CodeMirror from './CodeMirror.vue'
     import Handler from './Handler.vue';
     import Transition from "./Transition";
 
@@ -98,7 +110,8 @@
         components: {
             Transition,
             Handler,
-            CodeEditor
+            CodeEditor,
+            CodeMirror
         },
         directives: {
             ...VueResizeOnEvent('value'),
@@ -110,7 +123,7 @@
             {
                 id: uniqid(),
                 index: 0,
-                handler: '[\'cast#flip#off\', \'on\']',
+                handler: '[\'eventTimeout#flip#off\', \'on\']',
             },
             {
                 id: uniqid(),
@@ -172,7 +185,7 @@
             this.handlers.push({
                 id: uniqid(),
                 index: this.handlers.length,
-                handler: '[\'cast#*_#*_\', \'<state>\']',
+                handler: '[\'cast#*_#*_\', () => keepState()]',
             })
         }
 
@@ -255,6 +268,7 @@
     line-height: 40px;
     padding: 0 20px;
     margin: 0;
+    border-bottom: solid 1px $dark;
     .icons {
       float: right;
       font-size: 0.8rem;
@@ -279,5 +293,18 @@
     border-radius: 0;
   }
 
+
+</style>
+
+<style lang="scss">
+  @import '../styles/theme';
+
+  .cm-s-initialData, .cm-s-events {
+    font-family: $code_font, monospace;
+    font-weight: 300;
+    font-size: 16px;
+    height: auto;
+    margin-bottom: 20px;
+  }
 
 </style>

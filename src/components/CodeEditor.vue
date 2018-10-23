@@ -1,16 +1,16 @@
 <template>
-    <textarea
-      autocomplete="off"
-      autocapitalize="off"
-      spellcheck="false"
-      v-model="code"
-      v-resize-on-value
-      v-resize-on-input
-    ></textarea>
+  <!--suppress HtmlFormInputWithoutLabel, CheckEmptyScriptTag -->
+  <textarea
+    ref="editor"
+    :id="id"
+    v-resize-on-input
+    v-resize-on-value
+    v-model="code" />
 </template>
 
 <script lang="ts">
     import { Component, Lifecycle, p, Prop, Watch } from "av-ts";
+    import * as uniqid from 'uniqid'
     import Vue from "vue";
     import VueResizeOnEvent from "../../../vue-resize-on-event/src/VueResizeOnEvent";
 
@@ -25,12 +25,18 @@
 
         code: string = ""
 
+        id = uniqid()
+
+        codeMirror?: any
+
+        $refs!: { editor: HTMLTextAreaElement }
+
         @Prop value = p({
             type: String,
             default: ""
         });
 
-        @Lifecycle created() {
+        @Lifecycle mounted() {
             this.code = this.value
         }
 
@@ -49,5 +55,8 @@
 
 <style type="scss" scoped>
 
+  textarea {
+    z-index: 10;
+  }
 
 </style>

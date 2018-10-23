@@ -1,5 +1,5 @@
 <template>
-  <div :class="[odd?'odd':'even', 'handler-group', 'list-group-item']">
+  <div :class="['handler-group', 'list-group-item']">
     <div class="controls-area">
       <div class="index" v-html="index + 1"></div>
       <div class="icons">
@@ -14,35 +14,35 @@
         </span>
       </div>
     </div>
+
     <div class="route">
       <input :class="['event', eventValid?'':'error']"
         v-model="event"
-        placeholder="event" />
-      <span class="hash">
-          <font-awesome-icon icon="hashtag" size="xs" />
-      </span>
+        placeholder="event"
+        v-resize-on-input
+        v-resize-on-value />
+
+      <span class="hash"> <font-awesome-icon icon="hashtag" size="xs" /> </span>
       <input class="context "
         v-model="context"
         placeholder="context" />
-      <span class="hash">
-          <font-awesome-icon icon="hashtag" size="xs" />
-      </span>
-      <input class="prev "
-        v-model="state"
-        placeholder="state" />
+
+      <span class="hash"> <font-awesome-icon icon="hashtag" size="xs" /> </span>
+      <input class="state" v-model="state" placeholder="state" />
     </div>
-    <CodeEditor
-      class="handler"
-      placeholder="handler"
-      language="javascript"
-      v-model="handler" />
+    <CodeMirror v-model="handler"
+      name="handler"
+      mode="javascript"
+      theme="midnight"
+      :lineNumbers="true"
+    />
   </div>
 </template>
 
 <script lang="ts">
     import { Component, Lifecycle, p, Prop, Watch } from "av-ts";
     import Vue from "vue";
-    import CodeEditor from "./CodeEditor";
+    import CodeMirror from './CodeMirror.vue'
 
     const HANDLER: RegExp = /\[([^,]+),(.*)]/;
 
@@ -61,8 +61,9 @@
 
     @Component({
         name: "Handler",
+        inheritAttrs: false,
         components: {
-            CodeEditor
+            CodeMirror
         }
     })
     export default class Handler extends Vue {
@@ -163,18 +164,11 @@
   @import '../styles/theme';
 
   input {
-    border: solid 1px $bg_color;
+    border: solid 1px $dark;
+    border-top: solid 1px $bg_color;
     &:focus {
       border: solid 1px $highlight_color;
       box-shadow: inset 0 0 6px $highlight_color;
-    }
-  }
-
-  textarea {
-    border: solid 2px $bg_color;
-    &:focus {
-      border: solid 2px $highlight_color;
-      box-shadow: inset 0 0 15px $highlight_color;
     }
   }
 
@@ -191,18 +185,28 @@
 
   .event,
   .context,
-  .prev {
+  .state {
+    font-family: $code_font, monospace;
+    font-weight: 300;
+    font-size: 17px;
     height: 32px;
     line-height: 32px;
-    font-size: 17px;
     text-align: center;
     background-color: $code_bg;
-    color: $text_color;
+    color: darken(#1DC116, 5%);
   }
 
   .event,
-  .prev {
+  .state {
     width: 100px;
+  }
+
+  .event {
+    border-left: solid 1px $code_bg;
+  }
+
+  .state {
+    border-right: solid 1px $code_bg;
   }
 
   .context {
@@ -216,7 +220,7 @@
     width: 30px;
     text-align: center;
     background: $darkest;
-    border-bottom: solid 1px $bg_color;
+    border-bottom: solid 1px $dark;
     border-top: solid 1px $bg_color;
   }
 
@@ -238,9 +242,14 @@
     padding: 0;
     width: auto;
     height: auto;
-    border: none;
-    border-radius: 0 !important;
     background: $bg_color;
+    border-radius: 0 !important;
+    border: none;
+    border-top: solid 1px $neutral;
+    border-bottom: solid 1px $dark;
+    &:last-child {
+      border-bottom: solid 1px $dark;
+    }
   }
 
   .controls-area {
@@ -249,6 +258,8 @@
     padding: 0 20px;
     line-height: 20px;
     margin-top: 5px;
+    border: none;
+    border-radius: 0 !important;
   }
 
   .index,
@@ -270,4 +281,17 @@
       color: $lighter;
     }
   }
+
+</style>
+
+<style lang="scss">
+  @import '../styles/theme';
+
+  .cm-s-handler {
+    font-family: $code_font, monospace;
+    font-weight: 300;
+    font-size: 16px;
+    height: auto !important;
+  }
+
 </style>
