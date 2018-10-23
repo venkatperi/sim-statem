@@ -1,11 +1,13 @@
-<template> <div class="container-fluid menu p-0 mt-2 mb-4"> <div class="row">
-      <div class="brand col-auto float-left align-middle">
-        <p>gen-statem State Machine Simulator</p>
+<template>
+  <div class="container-fluid menu p-0 m-0 mb-1">
+    <div class="row">
+      <div class="brand col-auto float-left align-middle pl-5">
+        gen-statem State Machine Simulator
       </div>
 
       <div class="col icon2 float-right text-right">
         <a class="icon" href="https://github.com/venkatperi/vue-flickr-app" target="_blank">
-          <font-awesome-icon :icon="['fab', 'github']" size="1x"/>
+          <font-awesome-icon :icon="['fab', 'github']" size="1x" />
         </a>
       </div>
 
@@ -28,17 +30,25 @@
 
 <style lang="scss" scoped>
 
+  @import '../styles/theme';
+
   .icon2 {
     margin-top: 5px;
   }
-  .menu, .icon  {
-    color: #222;
+
+  .menu, .icon {
+    color: $lighter;
+  }
+
+  .menu {
+    background: $darkest;
   }
 
   .brand {
     margin-bottom: 0;
     font-family: "Share Tech Mono", sans-serif;
     font-size: 1.4em;
+    line-height: 50px;
     text-transform: uppercase;
   }
 

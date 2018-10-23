@@ -2,9 +2,30 @@
   <div class="app">
     <div class="row">
       <div class="col">
-        <label for="handlers">State Machine Rules</label>
+        <div class="app-controls">
+          <span class="icon">
+            <font-awesome-icon icon="file" size="1x" />
+          </span>
+          <span class="icon">
+            <font-awesome-icon icon="save" size="1x" />
+          </span>
+        </div>
+        <span class="name">{{ name }}</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <div class="header">
+          <label>State Machine Rules</label>
+          <span class="icons">
+            <span class="icon" @click="addHandler">
+              <font-awesome-icon icon="plus" size="sm" />
+            </span>
+          </span>
+        </div>
         <div class="handlers list-group" id="handlers" ref="handlers">
-          <Handler class="handler"
+          <Handler
             v-for="h in sortedHandlers"
             :key="h.id"
             :index="h.index"
@@ -12,11 +33,9 @@
             v-on:remove="removeHandler(h.index)"
             v-model="h.handler"></Handler>
         </div>
-        <button v-on:click="addHandler()">+</button>
       </div>
       <div class="col">
-
-        <label for="initialData">Initial Data</label>
+        <div class="header">Initial Data</div>
         <textarea
           v-model="initialData"
           id="initialData"
@@ -26,7 +45,7 @@
           :class="['initialData' ]">
         </textarea>
 
-        <label for="events">Events</label>
+        <div class="header">Events</div>
         <textarea
           v-model="events"
           id="events"
@@ -40,7 +59,7 @@
           <button v-on:click="run()">Run</button>
         </div>
 
-        <label for="transitions">State Transitions</label>
+        <div class="header">State Transitions</div>
         <div id="transitions">
           <Transition
             class="transition"
@@ -49,7 +68,8 @@
             :state="t.state"
             :prev="t.prev"
             :event="t.event"
-            :route="t.event?t.event.toRoute(t.prev || t.state):'<initial>'"
+            :handlerIndex="t.handlerIndex"
+            :route="t.event?t.event.toRoute(t.prev || ''):'<initial>'"
           ></Transition>
         </div>
 
@@ -72,7 +92,7 @@
 
     const vm = require('vm')
     const Sortable = require('sortablejs')
-    const genStatem = require('gen-statem')
+    const genStatem = require('../../../statem')
     const uniqid = require('uniqid')
 
     @Component({
@@ -111,6 +131,8 @@
         transitions: Array<StateTransition> = []
 
         counter = 1
+
+        name = 'Untitled'
 
         $refs!: { handlers: HTMLElement }
 
@@ -174,8 +196,8 @@
             vm.runInThisContext(code)({
                 genStatem,
 
-                onState: (state: State, prev: State, data: any, event: Event) => {
-                    this.transitions.push({state, prev, data, event})
+                onState: (state: State, prev: State, data: any, event: Event, handlerIndex: number) => {
+                    this.transitions.push({state, prev, data, event, handlerIndex})
                 },
 
             })
@@ -185,11 +207,18 @@
 
 <style lang="scss" scoped>
 
+  @import '../styles/theme';
+
+  .app {
+    padding: 0 15px;
+
+  }
+
   .events, .initialData, .output {
     width: 100%;
     resize: none;
-    background-color: #272822;
-    color: #F8F8F2;
+    background-color: $code_bg;
+    color: $text_color;
     border: none;
     border-radius: 0;
     padding: 10px 20px;
@@ -200,34 +229,49 @@
   }
 
   #transitions {
-    background-color: #272822;
+    background-color: $code_bg;
     min-height: 75px;
     width: 100%;
+    color: $text_color;
   }
 
   .transition {
   }
 
-  label {
+  .header {
+    font-family: $display_font;
+    font-size: 16px;
+    font-weight: 400;
+    text-transform: uppercase;
+    color: lighten($text_color, 20%);
     width: 100%;
-    background: #444;
-    display: block;
-    height: 34px;
-    line-height: 34px;
+    background: $heading_bg;
+    height: 40px;
+    line-height: 40px;
     padding: 0 20px;
-    color: #ccc;
     margin: 0;
-    font-size: 18px;
-    border-bottom: solid 1px #888;
-  }
-
-  .controls {
+    .icons {
+      float: right;
+      font-size: 0.8rem;
+      line-height: 40px;
+      .icon {
+        color: $text_color;
+        &:hover {
+          color: $lighter;
+        }
+      }
+    }
   }
 
   button {
     font-size: 18px;
     padding: 5px 15px;
     margin: 10px 0 15px;
+    color: #555;
+  }
+
+  .handlers {
+    border-radius: 0;
   }
 
 

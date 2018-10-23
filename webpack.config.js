@@ -1,7 +1,8 @@
 const path = require( 'path' );
 const webpack = require( 'webpack' );
 const VueLoaderPlugin = require( 'vue-loader/lib/plugin' )
-
+const MonacoEditorPlugin = require('monaco-editor-webpack-plugin')
+const HardSourceWebpackPlugin = require( 'hard-source-webpack-plugin' );
 
 const mode = process.env.NODE_ENV || 'production';
 
@@ -16,6 +17,8 @@ module.exports = {
 
   plugins: [
     new VueLoaderPlugin(),
+    new MonacoEditorPlugin(),
+    // new HardSourceWebpackPlugin()
   ],
 
   module: {

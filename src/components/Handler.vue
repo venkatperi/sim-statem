@@ -2,35 +2,47 @@
   <div :class="[odd?'odd':'even', 'handler-group', 'list-group-item']">
     <div class="controls-area">
       <div class="index" v-html="index + 1"></div>
-      <div class="close" @click="$emit('remove')">x</div>
+      <div class="icons">
+        <span class="icon" @click="toggleVisible()">
+          <font-awesome-icon :icon="visible?'eye':'eye-slash'" size="xs" />
+        </span>
+        <span class="icon" @click="$emit('test')">
+          <font-awesome-icon icon="vial" size="xs" />
+        </span>
+        <span class="icon" @click="$emit('remove')">
+          <font-awesome-icon icon="times-circle" size="xs" />
+        </span>
+      </div>
     </div>
     <div class="route">
       <input :class="['event', eventValid?'':'error']"
         v-model="event"
         placeholder="event" />
-      <span class="hash">#</span>
+      <span class="hash">
+          <font-awesome-icon icon="hashtag" size="xs" />
+      </span>
       <input class="context "
         v-model="context"
         placeholder="context" />
-      <span class="hash">#</span>
-      <input class="state "
+      <span class="hash">
+          <font-awesome-icon icon="hashtag" size="xs" />
+      </span>
+      <input class="prev "
         v-model="state"
         placeholder="state" />
     </div>
-    <textarea
-      v-model="handler"
+    <CodeEditor
+      class="handler"
       placeholder="handler"
-      v-resize-on-value
-      v-resize-on-input
-      :class="['handler' ]">
-      </textarea>
+      language="javascript"
+      v-model="handler" />
   </div>
 </template>
 
 <script lang="ts">
     import { Component, Lifecycle, p, Prop, Watch } from "av-ts";
     import Vue from "vue";
-    import VueResizeOnEvent from "../../../vue-resize-on-event/src/VueResizeOnEvent";
+    import CodeEditor from "./CodeEditor";
 
     const HANDLER: RegExp = /\[([^,]+),(.*)]/;
 
@@ -49,21 +61,24 @@
 
     @Component({
         name: "Handler",
-        directives: {
-            ...VueResizeOnEvent("value"),
-            ...VueResizeOnEvent("input")
+        components: {
+            CodeEditor
         }
     })
     export default class Handler extends Vue {
-        event = "";
+        event = ""
 
-        context = "";
+        context = ""
 
-        state = "";
+        state = ""
 
-        route = "";
+        route = ""
 
-        handler = "";
+        handler = ""
+
+        visible = true
+
+        collapsed = false
 
         @Prop
         value = p({
@@ -132,19 +147,36 @@
             const value = `[${this.route}, ${this.handler}]`;
             this.$emit("input", value);
         }
+
+        toggleVisible() {
+            this.visible = !this.visible
+            this.$emit('visible', this.visible)
+        }
+
+        toggleCollapse() {
+            this.collapsed = !this.collapsed
+        }
     }
 </script>
 
 <style type="scss" scoped>
+  @import '../styles/theme';
+
+  $bg_color: lighten($dark, 10%);
+
+  input, textarea {
+    border: solid 1px $bg_color;
+    &:focus {
+      border: solid 1px $highlight_color;
+      box-shadow: inset 0 0 7px $highlight_color;
+    }
+  }
+
   .route {
     margin-top: 0;
     width: 100%;
     display: flex;
-    border-bottom: solid 1px #444;
-  }
-
-  input {
-    border: solid 1px #272822;
+    border: none;
   }
 
   input.error {
@@ -153,17 +185,17 @@
 
   .event,
   .context,
-  .state {
+  .prev {
     height: 32px;
     line-height: 32px;
     font-size: 17px;
     text-align: center;
-    background-color: #272822;
-    color: #bbb;
+    background-color: $code_bg;
+    color: $text_color;
   }
 
   .event,
-  .state {
+  .prev {
     width: 100px;
   }
 
@@ -172,25 +204,28 @@
   }
 
   .hash {
-    font-size: 20px;
-    line-height: 32px;
-    color: #777;
+    line-height: 30px;
+    color: $less_neutral;
     font-weight: 200;
     width: 30px;
     text-align: center;
-    background: #000;
-    border-left: solid 1px #444;
-    border-right: solid 1px #444;
+    background: $darkest;
+    border-bottom: solid 1px $bg_color;
+    border-top: solid 1px $bg_color;
   }
 
-  textarea.handler {
+  .handler {
     width: 100%;
     resize: none;
-    background-color: #272822;
-    color: #bbb;
-    border: none;
+    background-color: $code_bg;
+    color: $text_color;
     border-radius: 0;
     padding: 10px 20px;
+  }
+
+  .handler-wrapper {
+    height: auto;
+    width: auto;
   }
 
   .handler-group {
@@ -198,33 +233,35 @@
     width: auto;
     height: auto;
     border: none;
-    border-radius: 0;
-  }
-
-  .oddx {
-    color: #222;
-    background: #aaa;
-  }
-
-  .even, .odd {
-    color: #222;
-    background: #bbb;
+    border-radius: 0 !important;
+    background: $bg_color;
   }
 
   .controls-area {
+    font-family: $display_font;
     height: 25px;
-    padding: 0 10px;
+    padding: 0 20px;
     line-height: 20px;
     margin-top: 5px;
   }
 
   .index,
   .controls {
-    font-size: 22px;
+    font-size: 16px;
+    font-weight: bold;
+    color: $darkest;
     float: left;
   }
 
-  .close {
+  .icons {
     float: right;
+    font-size: 1.1em;
+  }
+
+  .icon {
+    color: $darkest;
+    &:hover {
+      color: $lighter;
+    }
   }
 </style>

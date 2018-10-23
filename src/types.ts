@@ -11,4 +11,5 @@ export type StateTransition = {
     prev?: State
     data?: any
     event?: Event
+    handlerIndex: number
 }

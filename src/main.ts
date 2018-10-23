@@ -1,6 +1,9 @@
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faGithub, faWikipediaW } from "@fortawesome/free-brands-svg-icons";
-import { faLink } from "@fortawesome/free-solid-svg-icons";
+import {
+    faEye, faEyeSlash, faFile, faHashtag, faLink, faPlus, faSave, faTimesCircle,
+    faVial
+} from "@fortawesome/free-solid-svg-icons";
 import Vue from "vue";
 import VueRouter from "vue-router";
 import App from "./components/App.vue";
@@ -10,7 +13,8 @@ import AppMenu from "./components/AppMenu.vue";
 
 const {FontAwesomeIcon} = require("@fortawesome/vue-fontawesome");
 
-library.add(faGithub, faWikipediaW, faLink);
+library.add(faGithub, faWikipediaW, faLink, faTimesCircle, faPlus, faVial,
+    faSave, faFile, faHashtag, faEye, faEyeSlash);
 Vue.component("font-awesome-icon", FontAwesomeIcon);
 Vue.config.productionTip = false;
 

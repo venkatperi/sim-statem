@@ -1,9 +1,10 @@
 <template>
   <div class="transition">
     <div class="expander" v-html="expanded?'-':'+'"></div>
-    <div class="state">{{ prev }}</div>
+    <div class="prev">{{ prev }}</div>
     <div class="route">{{ route }}</div>
-    <div class="prev">{{ state }}</div>
+    <div class="current">{{ state }}</div>
+    <div class="handlerIndex">{{ handlerIndex === -1 ? '' : handlerIndex }}</div>
   </div>
 </template>
 
@@ -42,6 +43,11 @@
             required: true
         })
 
+        @Prop handlerIndex = p({
+            type: Number,
+            required: true
+        })
+
     }
 </script>
 
@@ -61,31 +67,34 @@
     font-size: 18px;
   }
 
-  .expander, .state, .route {
+  .expander, .prev, .route {
     display: inline-block;
   }
 
-  .state, .route, .prev {
+  .prev, .route, .current, .handlerIndex {
     padding: 0 10px;
     flex: +1;
+    text-align: center;
   }
 
-  .state, .route {
+  .prev, .route, .current {
     border-right: solid 1px #444;
   }
 
-  .state {
-    text-align: right;
+  .prev {
     color: #888;
+    flex: 2
   }
 
   .route {
-    text-align: center;
-    flex: +2;
+    flex: +3;
   }
 
-  .prev {
-    text-align: left;
+  .current {
+    flex: 2
+  }
+
+  .handlerIndex {
   }
 
 </style>

@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css?family=Share+Tech+Mono|News+Cycle|Lato');
+@import url('https://fonts.googleapis.com/css?family=Share+Tech+Mono|News+Cycle|Work+Sans:300,400,600');
 @import 'variables';
+@import 'theme';
 //@import '../../node_modules/toastr/toastr';
 
 html,
@@ -11,7 +12,7 @@ body {
 body {
   color: $text-color;
   width: 100%;
-  background-color: #ddd;
+  background-color: darken($border_bg, 2%);
 }
 
 #content {
