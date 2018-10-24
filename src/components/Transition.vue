@@ -4,7 +4,7 @@
     <div class="prev">{{ prev }}</div>
     <div class="route">{{ route }}</div>
     <div class="current">{{ state }}</div>
-    <div class="handlerIndex">{{ handlerIndex === -1 ? '' : handlerIndex }}</div>
+    <div class="handlerIndex">{{ handlerIndex === -1 ? 'internal' : handlerIndex }}</div>
   </div>
 </template>
 
@@ -53,13 +53,16 @@
 
 <style scoped lang="scss">
 
+  @import '../styles/theme';
+
   .transition {
-    background: #353535;
-    color: #eee;
+    font-family: $code_font;
+    background: $code_bg;
+    color: $lighter;
     line-height: 30px;
     padding: 0 10px;
     display: flex;
-    border-bottom: solid 1px #545454;
+    border-bottom: solid 1px $dark;
   }
 
   .expander {
@@ -78,7 +81,7 @@
   }
 
   .prev, .route, .current {
-    border-right: solid 1px #444;
+    border-right: solid 1px $dark;
   }
 
   .prev {

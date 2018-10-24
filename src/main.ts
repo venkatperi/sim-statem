@@ -36,7 +36,8 @@ let router = new VueRouter({
 
 Vue.use(VueRouter);
 
-new Vue({
+let app = new Vue({
     router,
     el: "#app"
 });
+

@@ -2,11 +2,14 @@
   <codemirror
     :class="xClass"
     v-model="code"
-    :options="cmOptions" />
+    :options="cmOptions"
+    @ready="onReady"
+  />
 </template>
 
 <script lang="ts">
     import { Component, Lifecycle, p, Prop, Watch } from "av-ts";
+    import { Editor, KeyMap } from 'codemirror'
     import 'codemirror/lib/codemirror.css'
     import 'codemirror/mode/javascript/javascript'
     import 'codemirror/theme/midnight.css'
@@ -14,15 +17,18 @@
     import codemirror from 'vue-codemirror/src/codemirror.vue'
     import { CodeMirrorOptions } from '../types';
 
+
     @Component({
-        name: "CodeMirror",
+        name: "VueCodeMirror",
         components: {
             codemirror
-        }
+        },
     })
-    export default class CodeMirror extends Vue {
+    export default class VueCodeMirror extends Vue {
 
         code = ""
+
+        cm?: Editor
 
         @Prop value = p({
             type: String,
@@ -118,7 +124,6 @@
             this.loadMode()
             this.loadTheme()
             this.code = this.value
-            console.log(this.fullTheme)
         }
 
         @Watch('mode')
@@ -155,7 +160,9 @@
                 mode: this.mode,
                 theme: this.fullTheme,
                 inputStyle: this.inputStyle,
-                lineNumbers: this.lineNumbers
+                lineNumbers: this.lineNumbers,
+                extraKeys: this.extraKeys as KeyMap,
+                readOnly: this.readOnly
             }
         }
 
@@ -165,6 +172,10 @@
 
         loadTheme() {
             require(`codemirror/theme/${this.theme}.css`)
+        }
+
+        onReady(cm: Editor) {
+            this.cm = cm
         }
     }
 </script>

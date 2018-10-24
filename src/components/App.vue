@@ -37,7 +37,7 @@
       <div class="col">
 
         <div class="header">Initial State</div>
-        <CodeMirror
+        <VueCodeMirror
           v-model="initialState"
           name="initialData"
           mode="javascript"
@@ -46,7 +46,7 @@
         />
 
         <div class="header">Initial Data</div>
-        <CodeMirror
+        <VueCodeMirror
           v-model="initialData"
           name="initialData"
           mode="javascript"
@@ -55,12 +55,13 @@
         />
 
         <div class="header">Events</div>
-        <CodeMirror
+        <VueCodeMirror
           v-model="events"
           mode="javascript"
           theme="midnight"
           :lineNumbers="true"
           name="events"
+          :readOnly="processing"
         />
 
         <div class="controls">
@@ -80,38 +81,46 @@
             :route="t.event?t.event.toRoute(t.prev || ''):'<initial>'"
           ></Transition>
         </div>
-
-
       </div>
     </div>
+
+    <VueTerm
+      class="xterm"
+      @input="onInput"
+      :value="result"
+      :pending="cmdPending"
+      prompt="> "
+    />
   </div>
 </template>
 
 <script lang="ts">
+
     import { Component, Lifecycle } from "av-ts";
     import { Event, State } from "gen-statem";
     import { SortableEvent } from "sortablejs";
+    import { ITypedWorker } from "typed-web-workers";
     import Vue from 'vue';
     import VueResizeOnEvent from '../../../vue-resize-on-event/src/VueResizeOnEvent'
-    import sm from '../templates/sm'
-    import { HandlerType, StateTransition } from "../types";
-    import CodeEditor from "./CodeEditor";
-    import CodeMirror from './CodeMirror.vue'
+    import VueTerm from '../../../vue-term/src'
+    import { SmSim } from "../SmSim";
+    import { HandlerType, SmData, StateTransition, VmData } from "../types";
     import Handler from './Handler.vue';
     import Transition from "./Transition";
+    import VueCodeMirror from './VueCodeMirror.vue'
 
-    const vm = require('vm')
     const Sortable = require('sortablejs')
-    const genStatem = require('../../../statem')
     const uniqid = require('uniqid')
+    const store = require('store')
+
 
     @Component({
         name: 'App',
         components: {
             Transition,
             Handler,
-            CodeEditor,
-            CodeMirror
+            VueCodeMirror,
+            VueTerm,
         },
         directives: {
             ...VueResizeOnEvent('value'),
@@ -123,7 +132,7 @@
             {
                 id: uniqid(),
                 index: 0,
-                handler: '[\'eventTimeout#flip#off\', \'on\']',
+                handler: '[\'cast#flip#off\', \'on\']',
             },
             {
                 id: uniqid(),
@@ -132,11 +141,17 @@
             },
         ]
 
+        result = ''
+
+        cmdPending = false
+
+        sim = new SmSim()
+
         events = 'cast(\'flip\')'
 
         initialData = '{}'
 
-        initialState = 'off'
+        initialState = '\'off\''
 
         output = ''
 
@@ -145,6 +160,12 @@
         counter = 1
 
         name = 'Untitled'
+
+        command = ''
+
+        processing = false
+
+        worker?: ITypedWorker<VmData, any>
 
         $refs!: { handlers: HTMLElement }
 
@@ -160,6 +181,10 @@
                     }
                 },
             })
+            this.sim.stateHandler = (state: State, prev: State, data: any, event: Event, handlerIndex: number) => {
+                this.transitions.push({state, prev, data, event, handlerIndex})
+            }
+            this.initSim()
         }
 
         get sortedHandlers() {
@@ -170,6 +195,50 @@
             return '['
                 + this.sortedHandlers.map(x => x.handler).join(',')
                 + ']'
+        }
+
+        onInput(line: string) {
+            let result = ''
+            if (line.length != 0) {
+                switch (line) {
+                    case 'clear':
+                        this.transitions = []
+                        break;
+                    default:
+                        try {
+                            result = this.sim.exec(line)
+                        }
+                        catch (e) {
+                            result = e.message
+                        }
+                }
+            }
+            this.$emit('result', result)
+        }
+
+        load(name: string) {
+            this.fromObject(store.get(`sm-${name}`))
+        }
+
+        save(n?: string) {
+            let name = n || this.name
+            store.set(`sm-${name}`, this.toObject())
+        }
+
+        fromObject(obj: SmData) {
+            this.handlers = obj.handlers
+            this.initialState = obj.initialState
+            this.initialData = obj.initialData
+            this.events = obj.events
+        }
+
+        toObject(): SmData {
+            return {
+                handlers: this.handlers,
+                initialState: this.initialState,
+                initialData: this.initialData,
+                events: this.events
+            }
         }
 
         removeHandler(index: number) {
@@ -195,25 +264,15 @@
             this.transitions = []
         }
 
-        run() {
-            const code = sm({
-                handlers: this.handlerCode,
-                initialData: this.initialData,
-                initialState: this.initialState,
-                events: this.events,
-            })
-
-            this.reset()
-
-            vm.runInThisContext(code)({
-                genStatem,
-
-                onState: (state: State, prev: State, data: any, event: Event, handlerIndex: number) => {
-                    this.transitions.push({state, prev, data, event, handlerIndex})
-                },
-
-            })
+        initSim() {
+            this.sim.init(this.toObject())
         }
+
+        run() {
+            // this.initSim()
+        }
+
+
     }
 </script>
 
@@ -223,7 +282,7 @@
 
   .app {
     padding: 0 15px;
-
+    position: relative;
   }
 
   .events, .initialData, .output {
@@ -293,6 +352,15 @@
     border-radius: 0;
   }
 
+  .xterm {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    padding: 20px 0;
+    background: $code_bg;
+  }
 
 </style>
 

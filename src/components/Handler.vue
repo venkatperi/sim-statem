@@ -42,7 +42,7 @@
 <script lang="ts">
     import { Component, Lifecycle, p, Prop, Watch } from "av-ts";
     import Vue from "vue";
-    import CodeMirror from './CodeMirror.vue'
+    import CodeMirror from './VueCodeMirror.vue'
 
     const HANDLER: RegExp = /\[([^,]+),(.*)]/;
 
@@ -167,7 +167,6 @@
     border: solid 1px $dark;
     border-top: solid 1px $bg_color;
     &:focus {
-      border: solid 1px $highlight_color;
       box-shadow: inset 0 0 6px $highlight_color;
     }
   }
@@ -187,13 +186,14 @@
   .context,
   .state {
     font-family: $code_font, monospace;
-    font-weight: 300;
+    font-weight: 500;
     font-size: 17px;
     height: 32px;
     line-height: 32px;
     text-align: center;
     background-color: $code_bg;
-    color: darken(#1DC116, 5%);
+    /*color: darken(#1DC116, 5%);*/
+    color: lighten(#736D90, 10%);
   }
 
   .event,
@@ -291,7 +291,11 @@
     font-family: $code_font, monospace;
     font-weight: 300;
     font-size: 16px;
-    height: auto !important;
+    height: auto;
+
+    &.CodeMirror-focused {
+      box-shadow: inset 0 0 6px $highlight_color;
+    }
   }
 
 </style>

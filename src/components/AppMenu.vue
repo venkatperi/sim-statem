@@ -37,7 +37,7 @@
   }
 
   .menu, .icon {
-    color: $lighter;
+    color: lighten(#416CB6, 10%);
   }
 
   .menu {
@@ -46,8 +46,9 @@
 
   .brand {
     margin-bottom: 0;
-    font-family: "Share Tech Mono", sans-serif;
-    font-size: 1.4em;
+    font-family: $display_font, sans-serif;
+    font-weight: 200;
+    font-size: 1.3em;
     line-height: 50px;
     text-transform: uppercase;
   }
