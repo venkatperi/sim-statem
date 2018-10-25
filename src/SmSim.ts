@@ -1,3 +1,4 @@
+import { keepState, nextState, repeatState } from "gen-statem"
 import { OnStateHandler, SmData } from "./types"
 
 const VM = require('vm-plus')
@@ -9,6 +10,9 @@ export class SmSim {
     constructor() {
         this.vm
             .global('StateMachine', StateMachine)
+            .global('keepState', keepState)
+            .global('nextState', nextState)
+            .global('repeatState', repeatState)
             .global('sm', null)
             .global('stateHandler', null)
             .global('call', null)
@@ -19,7 +23,7 @@ export class SmSim {
      *
      * @return {OnStateHandler}
      */
-    get stateHandler(): OnStateHandler {
+    get stateListener(): OnStateHandler {
         return this.get('stateHandler') as OnStateHandler
     }
 
@@ -27,7 +31,7 @@ export class SmSim {
      *
      * @param handler
      */
-    set stateHandler(handler: OnStateHandler) {
+    set stateListener(handler: OnStateHandler) {
         this.set('stateHandler', handler)
         this.exec(`if (sm) sm.on( 'state', stateHandler )`)
     }
@@ -59,6 +63,7 @@ export class SmSim {
               sm.on( 'state', stateHandler )
           sm.startSM()
 `
+        console.log(code)
         this.exec(code)
     }
 

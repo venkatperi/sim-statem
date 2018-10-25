@@ -20,7 +20,6 @@ export type SmData = {
     handlers: Array<HandlerType>,
     initialState: string,
     initialData: string,
-    events: string
 }
 
 export type InputContinuation = (input: string) => void

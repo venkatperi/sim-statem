@@ -142,8 +142,8 @@
         }
 
         @Watch('value')
-        valueChanged(v: string) {
-            this.code = v
+        valueChanged() {
+            this.code = this.value
         }
 
         @Watch('code')

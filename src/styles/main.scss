@@ -12,8 +12,9 @@ body {
 body {
   color: $text-color;
   width: 100%;
-  background-color: darken($border_bg, 2%);
+  background-color: darken($border_bg, 2%) !important;
 }
+
 
 #content {
   height: 100%;

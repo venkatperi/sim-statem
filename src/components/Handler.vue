@@ -111,6 +111,16 @@
             this.updateRoute();
         }
 
+        @Watch("context")
+        contextChanged() {
+            this.updateRoute();
+        }
+
+        @Watch("state")
+        stateChanged() {
+            this.updateRoute();
+        }
+
         @Watch("route")
         watchRoute() {
             this.emitHandler();

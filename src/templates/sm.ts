@@ -28,7 +28,6 @@ function createSM(opts: { [key: string]: string }) {
   sm.on( 'state', onState )
   sm.startSM()
   
-  ${opts.events}
 }
 `;
 }
