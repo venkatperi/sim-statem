@@ -1,11 +1,20 @@
 <template>
   <div class="app">
+
     <div>
       <b-modal id="load" title="Load State Machine" v-model="showLoad">
-        <MultiSelect @select="load" :options="savedFileNames()"></MultiSelect>
+        <MultiSelect @select="load" :options="savedFileNames()" />
       </b-modal>
     </div>
 
+    <div>
+      <b-modal id="delete"
+               @ok="deleteFile"
+               v-model="showDelete"
+               title="Delete State Machine?">
+        Are you sure you want to delete {{ name }}?
+      </b-modal>
+    </div>
 
     <div class="row">
       <div class="col">
@@ -20,18 +29,21 @@
             <span class="icon" v-b-modal.load>
             <v-icon name="file" scale="1.3" />
           </span>
+            <span class="icon" v-b-modal.delete>
+            <v-icon name="trash-alt" scale="1.3" />
+          </span>
           </div>
-          <LabelEdit
-            class="name"
-            type="text"
-            placeholder="Name..."
-            v-model="name" />
+          <LabelEdit class="name"
+                     type="text"
+                     v-model="name"
+                     placeholder="Name..." />
         </div>
       </div>
     </div>
 
     <div class="row">
       <div class="col">
+
         <div class="header">
           <label>State Machine Rules</label>
           <span class="icons">
@@ -40,80 +52,68 @@
             </span>
           </span>
         </div>
+
         <div class="handlers list-group" id="handlers" ref="handlers">
-          <Handler
-            v-for="h in sortedHandlers"
-            :key="h.id"
-            :index="h.index"
-            :odd="h.index%2 === 1"
-            v-on:remove="removeHandler(h.index)"
-            v-model="h.handler" />
+          <Handler v-for="h in sortedHandlers"
+                   :key="h.id"
+                   :index="h.index"
+                   :odd="h.index%2 === 1"
+                   v-on:remove="removeHandler(h.index)"
+                   v-model="h.handler" />
         </div>
       </div>
-      <div class="col">
 
+      <div class="col">
         <b-tabs>
           <b-tab title="Initial State" active>
-            <VueCodeMirror
-              v-model="initialState"
-              name="initialData"
-              mode="javascript"
-              theme="midnight"
-              :lineNumbers="true" />
+            <VueCodeMirror v-model="initialState"
+                           name="initialData"
+                           mode="javascript"
+                           theme="midnight"
+                           @blur="sanitize"
+                           :lineNumbers="true" />
           </b-tab>
           <b-tab title="Current State">
-            <VueCodeMirror
-              v-model="currentState"
-              name="currentState"
-              mode="javascript"
-              theme="midnight"
-              :lineNumbers="true" />
+            <VueCodeMirror v-model="currentState"
+                           name="currentState"
+                           mode="javascript"
+                           theme="midnight"
+                           :read-only="true"
+                           :lineNumbers="true" />
           </b-tab>
         </b-tabs>
 
         <b-tabs>
           <b-tab title="Initial Data" active>
-            <VueCodeMirror
-              v-model="initialData"
-              name="initialData"
-              mode="javascript"
-              theme="midnight"
-              :lineNumbers="true" />
+            <VueCodeMirror v-model="initialData"
+                           name="initialData"
+                           mode="javascript"
+                           theme="midnight"
+                           :lineNumbers="true" />
           </b-tab>
           <b-tab title="Current Data">
-            <VueCodeMirror
-              v-model="currentData"
-              name="currentData"
-              mode="javascript"
-              theme="midnight"
-              :lineNumbers="true" />
+            <VueCodeMirror v-model="currentData"
+                           name="currentData"
+                           mode="javascript"
+                           theme="midnight"
+                           :lineNumbers="true" />
           </b-tab>
         </b-tabs>
 
         <div class="header">State Transitions</div>
-        <div id="transitions">
-          <Transition
-            class="transition"
-            v-for="(t, index) in transitions"
-            :key="index"
-            :state="t.state"
-            :prev="t.prev"
-            :event="t.event"
-            :handlerIndex="t.handlerIndex"
-            :route="t.event?t.event.toRoute(t.prev || ''):'<initial>'" />
-        </div>
+        <Transition class="transition" :transitions="transitions" />
       </div>
     </div>
 
     <div class="repl-outer">
       <div class="header">REPL</div>
       <div class="repl-inner">
-        <VueTerm
-          class="repl"
-          @input="onInput"
-          :value="result"
-          :pending="cmdPending"
-          prompt="> " />
+        <VueTerm class="repl"
+                 @input="onInput"
+                 :value="result"
+                 :pending="cmdPending"
+                 :command="termCommand"
+                 prompt="> " />
       </div>
     </div>
   </div>
@@ -133,9 +133,13 @@
     import Vue from 'vue';
     import MultiSelect from 'vue-multiselect'
     import LabelEdit from '../../../label-edit/src/LabelEdit.vue'
-    import VueResizeOnEvent from '../../../vue-resize-on-event/src/VueResizeOnEvent'
+    import VueResizeOnEvent
+        from '../../../vue-resize-on-event/src/VueResizeOnEvent'
     import { SmSim } from "../SmSim";
-    import { HandlerType, SmData, StateTransition } from "../types";
+    import {
+        DefaultHandler, IndexedHandler, SmData, StateTransition
+    } from "../types";
+    import { quote } from '../util'
     import Handler from './Handler.vue';
     import Transition from "./Transition";
     import VueCodeMirror from './VueCodeMirror.vue'
@@ -144,11 +148,12 @@
     const Sortable = require('sortablejs')
     const uniqid = require('uniqid')
 
+    const MIN_VERSION = 1
+
     @Component({
         name: 'App',
         components: {
-            Transition,
-            Handler,
+            Transition, Handler,
             VueCodeMirror,
             VueTerm,
             LabelEdit,
@@ -165,22 +170,15 @@
         }
     })
     export default class App extends Vue {
-        handlers: Array<HandlerType> = [
-            {
-                id: uniqid(),
-                index: 0,
-                handler: '[\'cast#flip#off\', \'on\']',
-            },
-            {
-                id: uniqid(),
-                index: 1,
-                handler: '[\'cast#flip#on\', \'off\']',
-            },
-        ]
+        handlers: Array<IndexedHandler> = []
 
         showLoad: boolean = false
 
+        showDelete: boolean = false
+
         result = ''
+
+        revision: number = 0
 
         cmdPending = false
 
@@ -190,19 +188,17 @@
 
         currentData = '123'
 
-        initialState = '\'off\''
+        initialState = 'initial'
 
         currentState = ''
 
-        output = ''
-
         transitions: Array<StateTransition> = []
-
-        counter = 1
 
         name = 'Untitled'
 
         dirty = false
+
+        termCommand = ''
 
         // noinspection JSUnusedGlobalSymbols
         $refs!: {
@@ -224,12 +220,16 @@
                 },
             })
             let self = this
-            this.sim.stateListener = (state: State, prev: State, data: any, event: Event, handlerIndex: number) => {
-                self.currentData = JSON.stringify(data, null, 2)
-                self.currentState = stateRoute(state)
-                self.transitions.push({state, prev, data, event, handlerIndex})
-            }
-            this.initSim()
+            this.sim.stateListener =
+                (state: State, prev: State, data: any, event: Event,
+                    handlerIndex: number) => {
+                    self.currentData = JSON.stringify(data, null, 2)
+                    self.currentState = stateRoute(state)
+                    self.transitions.push(
+                        {state, prev, data, event, handlerIndex})
+                }
+            this.createNew()
+            this.sanitize()
             this.dirty = false
         }
 
@@ -248,14 +248,16 @@
             this.dirty = true
         }
 
+        get sortedTransitions() {
+            return [...this.transitions].reverse()
+        }
+
         get sortedHandlers() {
             return this.handlers.sort((a, b) => a.index - b.index)
         }
 
-        get handlerCode() {
-            return '['
-                + this.sortedHandlers.map(x => x.handler).join(',')
-                + ']'
+        sanitize() {
+            this.initialState = quote(this.initialState)
         }
 
         savedFileNames(): string[] {
@@ -269,7 +271,6 @@
         }
 
         nameChanged(v: string) {
-            console.log(v)
             this.name = v
         }
 
@@ -279,6 +280,7 @@
                 switch (line) {
                     case 'clear':
                         this.transitions = []
+                        this.termCommand = 'clear'
                         break;
 
                     case 'init':
@@ -287,7 +289,7 @@
 
                     default:
                         try {
-                            result = this.sim.exec(line)
+                            result = String(this.sim.exec(line))
                         }
                         catch (e) {
                             console.log(e)
@@ -298,10 +300,12 @@
             this.$emit('result', result)
         }
 
+        get fileName(): string {
+            return `sm-${this.name}`
+        }
+
         load(name: string) {
-            console.log(name)
             let data = store.get(`sm-${name}`)
-            console.log(data)
             this.fromObject(data)
             this.showLoad = false
             this.name = name
@@ -316,10 +320,28 @@
             this.dirty = false
         }
 
+        deleteFile() {
+            store.remove(this.fileName)
+            this.createNew()
+        }
+
+        createNew() {
+            this.name = 'Untitled'
+            this.handlers = []
+            this.initialState = 'initial'
+            this.initialData = 'undefined'
+            this.initSim()
+        }
+
         fromObject(obj: SmData) {
+            if (obj.formatVersion && obj.formatVersion < 1) {
+                throw new Error('Unsupported file version')
+            }
+
             this.handlers = obj.handlers
             this.initialState = obj.initialState
             this.initialData = obj.initialData
+            this.revision = obj.revision || 1
         }
 
         toObject(): SmData {
@@ -327,6 +349,8 @@
                 handlers: this.handlers,
                 initialState: this.initialState,
                 initialData: this.initialData,
+                formatVersion: MIN_VERSION,
+                revision: this.revision
             }
         }
 
@@ -343,25 +367,14 @@
             this.handlers.push({
                 id: uniqid(),
                 index: this.handlers.length,
-                handler: '[\'cast#*_#*_\', () => keepState()]',
+                handler: Object.assign({}, DefaultHandler)
             })
         }
 
-        reset() {
-            this.counter = 0
-            this.output = ''
-            this.transitions = []
-        }
-
         initSim() {
+            this.sanitize()
             this.sim.init(this.toObject())
         }
-
-        run() {
-            // this.initSim()
-        }
-
-
     }
 </script>
 

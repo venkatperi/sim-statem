@@ -1,3 +1,5 @@
+<!-- // Copyright 2018, Venkat Peri. --><!-- // --><!-- // Permission is hereby granted, free of charge, to any person obtaining a --><!-- // copy of this software and associated documentation files (the --><!-- // "Software"), to deal in the Software without restriction, including --><!-- // without limitation the rights to use, copy, modify, merge, publish, --><!-- // distribute, sublicense, and/or sell copies of the Software, and to permit --><!-- // persons to whom the Software is furnished to do so, subject to the --><!-- // following conditions: --><!-- // --><!-- // The above copyright notice and this permission notice shall be included --><!-- // in all copies or substantial portions of the Software. --><!-- // --><!-- // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS --><!-- // OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF --><!-- // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN --><!-- // NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, --><!-- // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR --><!-- // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE --><!-- // USE OR OTHER DEALINGS IN THE SOFTWARE. -->
+
 <template>
   <!--suppress CheckEmptyScriptTag -->
   <div :class="xClass" />
@@ -81,6 +83,8 @@
 
         @Prop theme = p(Object)
 
+        @Prop command = p(String)
+
         options: ITerminalOptions = {}
 
         $terminal!: Terminal
@@ -100,6 +104,17 @@
             if (this.cols && this.rows) {
                 this.$terminal.resize(this.cols, this.rows)
             }
+        }
+
+        @Watch('command')
+        onCommand() {
+            switch (this.command) {
+                case 'clear':
+                    this.$terminal.clear();
+                    break;
+            }
+
+            this.command = ''
         }
 
 
@@ -127,16 +142,12 @@
         }
 
         @Lifecycle beforeDestroy() {
-            // this.$terminal.selectAll()
-            // this.$emit('update:buffer', this.$terminal.getSelection().trim())
             this.$terminal.dispose()
         }
 
         readInput() {
             this.$localEcho.read(this.prompt)
-                .then((input: string) => {
-                    this.$emit('input', input)
-                })
+                .then((input: string) => this.$emit('input', input))
                 .catch((error: any) => {
                     this.$emit('error', error)
                     setImmediate(() => this.readInput())
@@ -149,8 +160,12 @@
             term.element.style.display = 'none'
             setTimeout(() => {
                 if (this.$el && parent) {
-                    this.$el.style.width = (parent.offsetWidth - this.$el.offsetLeft + parent.offsetLeft) + 'px'
-                    this.$el.style.height = (parent.offsetHeight - this.$el.offsetTop + parent.offsetTop) + 'px'
+                    this.$el.style.width =
+                        (parent.offsetWidth - this.$el.offsetLeft +
+                            parent.offsetLeft) + 'px'
+                    this.$el.style.height =
+                        (parent.offsetHeight - this.$el.offsetTop +
+                            parent.offsetTop) + 'px'
                     fit.fit(term)
                     // term.fit()
                     term.element.style.display = ''

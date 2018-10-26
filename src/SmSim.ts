@@ -1,47 +1,51 @@
 import { keepState, nextState, repeatState } from "gen-statem"
-import { OnStateHandler, SmData } from "./types"
+import { Handler, SmData, StateChangeListener } from "./types"
+import { VM } from './VM'
 
-const VM = require('vm-plus')
 const {StateMachine} = require('gen-statem')
 
+function handlerCode(h: Handler): string {
+    let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
+    return `[${route},${h.handler}]`
+}
+
 export class SmSim {
-    vm = new VM()
+    vm: VM
 
     constructor() {
-        this.vm
-            .global('StateMachine', StateMachine)
-            .global('keepState', keepState)
-            .global('nextState', nextState)
-            .global('repeatState', repeatState)
-            .global('sm', null)
-            .global('stateHandler', null)
-            .global('call', null)
-            .global('cast', null)
+        this.vm = new VM({
+            StateMachine,
+            keepState,
+            nextState,
+            repeatState,
+            sm: undefined
+        })
     }
 
     /**
      *
-     * @return {OnStateHandler}
+     * @return {StateChangeListener}
      */
-    get stateListener(): OnStateHandler {
-        return this.get('stateHandler') as OnStateHandler
+    get stateListener(): StateChangeListener {
+        return this.get('stateHandler') as StateChangeListener
     }
 
     /**
      *
      * @param handler
      */
-    set stateListener(handler: OnStateHandler) {
+    set stateListener(handler: StateChangeListener) {
         this.set('stateHandler', handler)
         this.exec(`if (sm) sm.on( 'state', stateHandler )`)
     }
 
-    exec(cmd: string) {
-        return this.vm.runNaked(cmd)
+    exec(cmd: string): any {
+        return this.vm.exec(cmd)
     }
 
     get(name: string) {
-        return this.vm.global[name]
+        // @ts-ignore
+        return this.vm.context[name]
     }
 
     /**
@@ -49,7 +53,7 @@ export class SmSim {
      * @param data
      */
     init(data: SmData) {
-        const handlers = data.handlers.map(x => x.handler)
+        const handlers = data.handlers.map(x => handlerCode(x.handler))
         let code = `
           sm = new StateMachine( {
             handlers: [${handlers}],
@@ -68,30 +72,7 @@ export class SmSim {
     }
 
     set(name: string, val: any) {
-        return this.vm.global(name, val)
+        // @ts-ignore
+        this.vm.context[name] = val
     }
 }
-
-//
-// let sim = new SmSim()
-//
-// let sm = sim.create({
-//     handlers: [
-//         {
-//             id: '0',
-//             index: 0,
-//             handler: '[\'cast#flip#off\', \'on\']',
-//         },
-//         {
-//             id: '1',
-//             index: 1,
-//             handler: '[\'cast#flip#on\', \'off\']',
-//         },
-//     ],
-//
-//     initialData: '{}',
-//     initialState: '\'off\'',
-//     events: 'cast(\'flip\')',
-// })
-//
-// sim.exec('')

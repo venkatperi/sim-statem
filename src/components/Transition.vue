@@ -1,10 +1,23 @@
 <template>
-  <div class="transition">
-    <div class="expander" v-html="expanded?'-':'+'"></div>
-    <div class="prev">{{ prev }}</div>
-    <div class="route">{{ route }}</div>
-    <div class="current">{{ state }}</div>
-    <div class="handlerIndex">{{ handlerIndex === -1 ? 'internal' : handlerIndex }}</div>
+  <div class="transitions">
+    <div class="row header">
+      <div class="index">#</div>
+      <div class="prev">From</div>
+      <div class="route">Route</div>
+      <div class="current">To</div>
+      <div class="handlerIndex">Handler</div>
+    </div>
+    <div :class="['row', index%2?'odd':'even']"
+      v-for="(t, index) in sortedTransitions"
+      :key="index">
+      <div class="index"v-html="sortedTransitions.length - index"></div>
+      <div class="prev" v-html="t.state"></div>
+      <div class="route" v-html="t.event?t.event.toRoute(t.prev || ''):'<initial>'"></div>
+      <div class="current" v-html="t.state"></div>
+      <div class="handlerIndex"
+        v-html="t.handlerIndex === -1 ? '' : t.handlerIndex">
+      </div>
+    </div>
   </div>
 </template>
 
@@ -16,38 +29,14 @@
         name: "Transition",
     })
     export default class Transition extends Vue {
-        expanded = false
-
-        @Prop state = p({
-            type: String,
-            required: true
+        @Prop transitions = p({
+            type: Array,
         })
 
-        @Prop prev = p({
-            type: String,
-            default: 'initial'
-        })
-
-        @Prop data = p({
-            type: Object,
-            default: undefined
-        })
-
-        @Prop event = p({
-            type: Object,
-            default: undefined
-        })
-
-        @Prop route = p({
-            type: String,
-            required: true
-        })
-
-        @Prop handlerIndex = p({
-            type: Number,
-            required: true
-        })
-
+        get sortedTransitions() {
+            let t = this.transitions as Array<Transition>
+            return [...t].reverse()
+        }
     }
 </script>
 
@@ -55,49 +44,42 @@
 
   @import '../styles/theme';
 
-  .transition {
+  .transitions {
+    width: 100%;
+    display: table;
+    font-weight: 200;
+    font-size: 14px;
+  }
+
+  .row {
+    width: 100%;
     font-family: $code_font;
     background: $code_bg;
-    color: $lighter;
+    color: $neutral;
     line-height: 30px;
     padding: 0 10px;
-    display: flex;
+    display: table-row;
+    justify-content: center;
+    &.header {
+      font-family: $display_font;
+      background: lighten($code_bg, 5%);
+      text-transform: uppercase;
+    }
+    &.even{
+      background: darken($code_bg, 10%);
+    }
+  }
+
+  .index, .prev, .route, .current, .handlerIndex {
+    display: table-cell;
+    padding: 0 10px;
+    flex: 1;
+    text-align: center;
     border-bottom: solid 1px $dark;
   }
 
-  .expander {
-    color: #aaa;
-    font-size: 18px;
-  }
-
-  .expander, .prev, .route {
-    display: inline-block;
-  }
-
-  .prev, .route, .current, .handlerIndex {
-    padding: 0 10px;
-    flex: +1;
-    text-align: center;
-  }
-
-  .prev, .route, .current {
+  .index, .prev, .route, .current {
     border-right: solid 1px $dark;
-  }
-
-  .prev {
-    color: #888;
-    flex: 2
-  }
-
-  .route {
-    flex: +3;
-  }
-
-  .current {
-    flex: 2
-  }
-
-  .handlerIndex {
   }
 
 </style>

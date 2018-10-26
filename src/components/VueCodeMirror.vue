@@ -1,5 +1,7 @@
 <template>
   <codemirror
+    v-on="$listeners"
+    v-bind="$attrs"
     :class="xClass"
     v-model="code"
     :options="cmOptions"
@@ -15,11 +17,11 @@
     import 'codemirror/theme/midnight.css'
     import Vue from "vue";
     import codemirror from 'vue-codemirror/src/codemirror.vue'
-    import { CodeMirrorOptions } from '../types';
-
+    import { CodeMirrorOptions } from "../CodeMirrorTypes";
 
     @Component({
         name: "VueCodeMirror",
+        inheritAttrs: false,
         components: {
             codemirror
         },
@@ -167,10 +169,12 @@
         }
 
         loadMode() {
+            // noinspection TypeScriptUnresolvedFunction
             require(`codemirror/mode/${this.mode}/${this.mode}`)
         }
 
         loadTheme() {
+            // noinspection TypeScriptUnresolvedFunction
             require(`codemirror/theme/${this.theme}.css`)
         }
 

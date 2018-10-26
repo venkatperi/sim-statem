@@ -50,6 +50,7 @@
     "monaco-editor-webpack-plugin": "^1.5.4",
     "node-sass": "^4.9.4",
     "object-inspect": "^1.6.0",
+    "quote-it": "^1.0.1",
     "sass-loader": "^7.1.0",
     "sortablejs": "^1.7.0",
     "store": "^2.0.12",
@@ -77,6 +78,7 @@
     "vue-worker": "^1.2.1",
     "webpack": "^4.22.0",
     "webpack-bundle-analyzer": "^2.13.1",
+    "webpack-chain": "^5.0.1",
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.9",
     "xterm": "^3.8.0"

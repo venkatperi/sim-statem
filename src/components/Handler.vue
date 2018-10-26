@@ -44,7 +44,7 @@
     import Vue from "vue";
     import CodeMirror from './VueCodeMirror.vue'
 
-    const HANDLER: RegExp = /\[([^,]+),(.*)]/;
+    const HANDLER: RegExp = /^\[([^,]+),(.*)]$/g;
 
     const events: string[] = [
         "cast",
@@ -83,8 +83,13 @@
 
         @Prop
         value = p({
-            type: String,
-            default: ""
+            type: Object,
+            default: {
+                event: '*_',
+                context: '*_',
+                state: '*_',
+                handler: '() => keepState()'
+            }
         });
 
         @Prop
@@ -142,21 +147,36 @@
         }
 
         valueChanged(): void {
-            let match = HANDLER.exec(this.value);
-            if (match && match.length >= 3) {
-                this.handler = match[2].trimLeft();
-
-                let route = match[1].replace(/['"]/g, "").trim();
-                let parts = route.split("#");
-                this.event = parts[0];
-                this.context = parts[1];
-                this.state = parts[2];
-            }
+            let v = this.value as Handler
+            this.event = v.event
+            this.context = v.context
+            this.state = v.state
+            this.handler = v.handler
         }
 
+        // _valueChanged(): void {
+        //     const placeholder = '!#!'
+        //     let v = this.value.replace('\n', placeholder)
+        //     console.log(v)
+        //     let match = HANDLER.exec(v);
+        //     if (match && match.length >= 3) {
+        //         this.handler = match[2].trimLeft();
+        //
+        //         let route = match[1].replace(/['"]/g, "").trim();
+        //         let parts = route.split("#");
+        //         this.event = parts[0].replace(placeholder, '\n');
+        //         this.context = parts[1].replace(placeholder, '\n');
+        //         this.state = parts[2].replace(placeholder, '\n');
+        //     }
+        // }
+
         emitHandler() {
-            const value = `[${this.route}, ${this.handler}]`;
-            this.$emit("input", value);
+            this.$emit("input", {
+                event: this.event,
+                context: this.context,
+                state: this.state,
+                handler: this.handler
+            });
         }
 
         toggleVisible() {

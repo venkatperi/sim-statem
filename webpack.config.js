@@ -1,95 +1,42 @@
-const path = require( 'path' );
-const webpack = require( 'webpack' );
-const VueLoaderPlugin = require( 'vue-loader/lib/plugin' )
-const HardSourceWebpackPlugin = require( 'hard-source-webpack-plugin' );
+const Config = require( 'webpack-chain' )
+const path = require( 'path' )
+const { inspect } = require( 'util' )
 
-const mode = process.env.NODE_ENV || 'production';
+function base() {
+  const config = new Config()
 
-module.exports = {
-  mode,
+  config
+    .entry( 'main' )
+    .add( './src/main.ts' )
 
-  entry: './src/main.ts',
+  config.output
+    .path( path.resolve( __dirname, './dist' ) );
 
-  output: {
-    path: path.resolve( __dirname, './dist' ),
-  },
+  [
+    'vue',
+    'ts',
+    'style',
+    'img',
+    'ext',
+    'devServer',
+    'misc',
+    'dev',
+    'prod',
+    // 'analyze',
+  ].forEach( x => require( `./webpack/${x}` )( config ) );
 
-  plugins: [
-    new VueLoaderPlugin(),
-    // new HardSourceWebpackPlugin()
-  ],
-
-  module: {
-    rules: [
-      {
-        test: /\.vue$/,
-        loader: 'vue-loader',
-      },
-
-      {
-        test: /\.tsx?$/,
-        loader: 'ts-loader',
-        exclude: /node_modules/,
-        options: {
-          appendTsSuffixTo: [/\.vue$/],
-        },
-      },
-
-      {
-        test: /\.(sa|sc|c)ss$/,
-        use: [
-          'vue-style-loader',
-          'css-loader',
-          'sass-loader'
-        ]
-      },
-
-      {
-        test: /\.(png|jpg|gif|svg)$/,
-        loader: 'file-loader',
-        options: {
-          name: '[name].[ext]?[hash]',
-        },
-      },
-    ],
-  },
-
-  resolve: {
-    extensions: ['.ts', '.js', '.vue', '.json'],
-    alias: {
-      'vue$': 'vue/dist/vue.esm.js',
-    },
-  },
-
-  devServer: {
-    historyApiFallback: true,
-    noInfo: true,
-  },
-
-  performance: {
-    hints: false,
-  },
-
-  devtool: '#eval-source-map',
-};
-
-if ( process.env.NODE_ENV === 'production' ) {
-  module.exports.devtool = '#source-map';
-  // http://vue-loader.vuejs.org/en/workflow/production.html
-  module.exports.plugins = (module.exports.plugins || []).concat( [
-    new webpack.DefinePlugin( {
-      'process.env': {
-        NODE_ENV: '"production"',
-      },
-    } ),
-    new webpack.optimize.UglifyJsPlugin( {
-      sourceMap: true,
-      compress: {
-        warnings: false,
-      },
-    } ),
-    new webpack.LoaderOptionsPlugin( {
-      minimize: true,
-    } ),
-  ] );
+  return config
 }
+
+let configs = [
+  'lib',
+  // 'umd'
+].map( x => {
+  let c = base()
+  require( `./webpack/${x}` )( c )
+  return c
+} )
+
+let cfg = configs.map( x => x.toConfig() )
+// console.log( inspect( cfg, { depth: 10, colors: true } ) )
+module.exports = cfg

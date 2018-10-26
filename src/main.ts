@@ -18,6 +18,7 @@ import AppFooter from "./components/AppFooter.vue";
 import AppMenu from "./components/AppMenu.vue";
 
 import 'vue-awesome/icons/file'
+import 'vue-awesome/icons/trash-alt'
 import 'vue-awesome/icons/save'
 import 'vue-awesome/icons/regular/file'
 
