@@ -1,4 +1,4 @@
-declare module "vue-monaco" {
+declare module "vue-*" {
     import Vue from "vue";
     export default Vue;
 }
