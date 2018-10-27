@@ -1,7 +1,10 @@
 <template>
   <div :class="['handler-group', 'list-group-item']">
-    <div class="controls-area">
-      <div class="index" v-html="index + 1"></div>
+    <div class="controls-area" @dblclick="toggleCollapse">
+      <span class="expander icon" @click="toggleCollapse">
+        <v-icon :name="collapsed?'caret-right':'caret-down'" scale="1.3" />
+      </span>
+      <span class="index" v-html="index + 1"></span>
       <div class="icons">
         <span class="icon" @click="toggleVisible()">
           <font-awesome-icon :icon="visible?'eye':'eye-slash'" size="xs" />
@@ -17,34 +20,57 @@
 
     <div class="route">
       <input :class="['event', eventValid?'':'error']"
-        v-model="event"
-        placeholder="event"
-        v-resize-on-input
-        v-resize-on-value />
+             v-model="event"
+             placeholder="event"
+             v-resize-on-input
+             v-resize-on-value />
 
-      <span class="hash"> <font-awesome-icon icon="hashtag" size="xs" /> </span>
-      <input class="context "
-        v-model="context"
-        placeholder="context" />
+      <span class="hash">
+        <font-awesome-icon icon="hashtag" size="xs" />
+      </span>
+      <input class="context " v-model="context" placeholder="context" />
 
-      <span class="hash"> <font-awesome-icon icon="hashtag" size="xs" /> </span>
+      <span class="hash">
+        <font-awesome-icon icon="hashtag" size="xs" />
+      </span>
       <input class="state" v-model="state" placeholder="state" />
     </div>
-    <CodeMirror v-model="handler"
-      name="handler"
-      mode="javascript"
-      theme="midnight"
-      :lineNumbers="true"
-    />
+    <div :class="[collapsed?'hide':'']">
+      <CodeMirror v-model="handler"
+                  ref="handler"
+                  :name="name"
+                  mode="javascript"
+                  theme="midnight"
+                  :x-bus="bus"
+                  @blur="format"
+                  :gutters='[ "errors", "CodeMirror-linenumbers"]'
+                  :lineNumbers="true" />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-    import { Component, Lifecycle, p, Prop, Watch } from "av-ts";
-    import Vue from "vue";
+    import { Component, Lifecycle, Mixin, p, Prop, Watch } from "av-ts";
+    import Bussed from "../traits/Bussed";
+    import Named from "../traits/Named";
+    import { Handler } from "../types";
+    import { format } from '../util'
     import CodeMirror from './VueCodeMirror.vue'
 
+    const {inspect} = require('util')
+
     const HANDLER: RegExp = /^\[([^,]+),(.*)]$/g;
+
+    function errorMarker(msg: string) {
+        var marker = document.createElement("div");
+        marker.style.color = "#f22";
+        marker.style.margin = "2px 0px 0px 8px"
+        marker.style.fontSize = "15px";
+        marker.title = msg
+        marker.innerHTML = "❌";
+        marker.setAttribute('data-tooltip', msg)
+        return marker;
+    }
 
     const events: string[] = [
         "cast",
@@ -66,7 +92,7 @@
             CodeMirror
         }
     })
-    export default class Handler extends Vue {
+    export default class VueHandler extends Mixin(Named, Bussed) {
         event = ""
 
         context = ""
@@ -140,6 +166,18 @@
             return validateEvent(this.event)
         }
 
+        format() {
+            try {
+                this.handler = format(this.handler)
+                this.bus.$emit(`${this.name}:clearGutter`, 'errors')
+            } catch (e) {
+                console.log(this.name)
+                this.bus.$emit(`${this.name}:addMarker`,
+                    Number(e.loc.start.line) - 1, "errors",
+                    errorMarker(e.message))
+            }
+        }
+
         updateRoute() {
             this.route = "\""
                 + [this.event, this.context, this.state].join("#")
@@ -153,22 +191,6 @@
             this.state = v.state
             this.handler = v.handler
         }
-
-        // _valueChanged(): void {
-        //     const placeholder = '!#!'
-        //     let v = this.value.replace('\n', placeholder)
-        //     console.log(v)
-        //     let match = HANDLER.exec(v);
-        //     if (match && match.length >= 3) {
-        //         this.handler = match[2].trimLeft();
-        //
-        //         let route = match[1].replace(/['"]/g, "").trim();
-        //         let parts = route.split("#");
-        //         this.event = parts[0].replace(placeholder, '\n');
-        //         this.context = parts[1].replace(placeholder, '\n');
-        //         this.state = parts[2].replace(placeholder, '\n');
-        //     }
-        // }
 
         emitHandler() {
             this.$emit("input", {
@@ -222,8 +244,8 @@
     line-height: 32px;
     text-align: center;
     background-color: $code_bg;
-    /*color: darken(#1DC116, 5%);*/
     color: lighten(#736D90, 10%);
+    flex-grow: 1;
   }
 
   .event,
@@ -240,7 +262,7 @@
   }
 
   .context {
-    flex-grow: 1;
+    /*flex-grow: 1;*/
   }
 
   .hash {
@@ -297,7 +319,6 @@
     font-size: 16px;
     font-weight: bold;
     color: $darkest;
-    float: left;
   }
 
   .icons {
@@ -312,12 +333,23 @@
     }
   }
 
+  .expander {
+    width: 20px;
+    height: 25px;
+    display: inline-block;
+  }
+
+  .hide {
+    display: none;
+    visibility: collapse;
+  }
+
 </style>
 
 <style lang="scss">
   @import '../styles/theme';
 
-  .cm-s-handler {
+  #handlers .CodeMirror {
     font-family: $code_font, monospace;
     font-weight: 300;
     font-size: 16px;

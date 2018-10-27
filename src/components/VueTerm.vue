@@ -83,7 +83,7 @@
 
         @Prop theme = p(Object)
 
-        @Prop command = p(String)
+        @Prop xBus = p(Object)
 
         options: ITerminalOptions = {}
 
@@ -91,6 +91,9 @@
 
         $localEcho!: LocalEchoController
 
+        get bus(): Vue {
+            return this.xBus as Vue
+        }
 
         @Watch('cols')
         colsChanged() {
@@ -106,18 +109,6 @@
             }
         }
 
-        @Watch('command')
-        onCommand() {
-            switch (this.command) {
-                case 'clear':
-                    this.$terminal.clear();
-                    break;
-            }
-
-            this.command = ''
-        }
-
-
         @Lifecycle mounted() {
             let term = new Terminal(this.options)
             term.open(this.$el)
@@ -130,7 +121,7 @@
             }
 
             const self = this
-            this.$parent.$on('result', function (value: string) {
+            this.bus.$on('repl:result', function (value: string) {
                 if (value && value.length > 0) {
                     self.$localEcho.println(value)
                 }
@@ -139,10 +130,17 @@
 
             setImmediate(() => this.readInput())
             setImmediate(() => this.fit())
+
+            this.bus.$on('repl:clear',
+                () => setTimeout(this.clear.bind(this), 10))
         }
 
         @Lifecycle beforeDestroy() {
             this.$terminal.dispose()
+        }
+
+        clear() {
+            this.$terminal.clear()
         }
 
         readInput() {

@@ -18,8 +18,15 @@ import AppFooter from "./components/AppFooter.vue";
 import AppMenu from "./components/AppMenu.vue";
 
 import 'vue-awesome/icons/file'
+import 'vue-awesome/icons/times-circle'
+import 'vue-awesome/icons/code'
+import 'vue-awesome/icons/circle'
 import 'vue-awesome/icons/trash-alt'
 import 'vue-awesome/icons/save'
+import 'vue-awesome/icons/chevron-circle-right'
+import 'vue-awesome/icons/chevron-circle-down'
+import 'vue-awesome/icons/caret-right'
+import 'vue-awesome/icons/caret-down'
 import 'vue-awesome/icons/regular/file'
 
 const {FontAwesomeIcon} = require("@fortawesome/vue-fontawesome");

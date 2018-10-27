@@ -18,37 +18,18 @@
 //  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
-import quoteIt from 'quote-it'
 
-const prettier = require('prettier/standalone')
-const plugins = [require('prettier/parser-babylon')]
+import { Trait, p, Prop } from "av-ts";
+import Vue from "vue"
 
-function unquote(str: string, type: string): string {
-    if (str.startsWith(type) && str.endsWith(type)) {
-        str = str.substr(1, str.length - 2)
-    }
-    return str
-}
-
-export function quote(str: string, type: string = '"'): string {
-    if (str.length === 0) {
-        return str;
-    }
-
-    str = unquote(str, '"')
-    str = unquote(str, "'")
-    return quoteIt(str, type)
-}
-
-export function format(src: string): string {
-    let code = prettier.format(src, {
-        parser: 'babylon',
-        plugins,
-        printWidth: 40,
-        semi: false
+@Trait export default class Bussed extends Vue {
+    @Prop xBus = p({
+        type: Object,
+        required: true,
     })
-    if (code.startsWith(';')) {
-        code = code.substr(1)
+
+    get bus(): Vue {
+        return this.xBus as Vue
     }
-    return code.trim()
 }
+

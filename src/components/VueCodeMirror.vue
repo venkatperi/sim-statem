@@ -1,23 +1,22 @@
 <template>
-  <codemirror
-    v-on="$listeners"
-    v-bind="$attrs"
-    :class="xClass"
-    v-model="code"
-    :options="cmOptions"
-    @ready="onReady"
-  />
+  <codemirror v-on="$listeners"
+              v-bind="$attrs"
+              :class="xClass"
+              v-model="code"
+              :options="cmOptions"
+              @ready="onReady" />
 </template>
 
 <script lang="ts">
-    import { Component, Lifecycle, p, Prop, Watch } from "av-ts";
+    import { Component, Lifecycle, Mixin, p, Prop, Watch } from "av-ts";
     import { Editor, KeyMap } from 'codemirror'
     import 'codemirror/lib/codemirror.css'
     import 'codemirror/mode/javascript/javascript'
     import 'codemirror/theme/midnight.css'
-    import Vue from "vue";
     import codemirror from 'vue-codemirror/src/codemirror.vue'
     import { CodeMirrorOptions } from "../CodeMirrorTypes";
+    import Bussed from "../traits/Bussed";
+    import Named from "../traits/Named";
 
     @Component({
         name: "VueCodeMirror",
@@ -26,7 +25,7 @@
             codemirror
         },
     })
-    export default class VueCodeMirror extends Vue {
+    export default class VueCodeMirror extends Mixin(Named, Bussed) {
 
         code = ""
 
@@ -120,12 +119,44 @@
 
         @Prop cursorHeight = p(Number)
 
-        @Prop name = p(String)
-
         @Lifecycle created() {
             this.loadMode()
             this.loadTheme()
             this.code = this.value
+            console.log(this.name)
+            this.bus.$on('refresh', this.refresh)
+            this.bus.$on(`${this.name}:refresh`, this.refresh)
+            this.bus.$on(`${this.name}:addMarker`, this.addMarker)
+            this.bus.$on(`${this.name}:removeMarker`, this.removeMarker)
+            this.bus.$on(`${this.name}:clearGutter`, this.clearGutter)
+
+        }
+
+        addMarker(line: number, gutter: string, el: HTMLElement) {
+            console.log(line, gutter, el)
+            if (this.cm) {
+                this.cm.setGutterMarker(line, gutter, el)
+            }
+        }
+
+        clearGutter(gutter: string) {
+            if (this.cm) {
+                this.cm.clearGutter(gutter)
+            }
+        }
+
+        removeMarker(line: number, gutter: string) {
+            if (this.cm) {
+                this.cm.setGutterMarker(line, gutter, null)
+            }
+        }
+
+        refresh() {
+            setTimeout(() => {
+                if (this.cm) {
+                    this.cm.refresh()
+                }
+            }, 0)
         }
 
         @Watch('mode')
@@ -164,7 +195,8 @@
                 inputStyle: this.inputStyle,
                 lineNumbers: this.lineNumbers,
                 extraKeys: this.extraKeys as KeyMap,
-                readOnly: this.readOnly
+                readOnly: this.readOnly,
+                gutters: this.gutters ? this.gutters.map(x => String(x)) : []
             }
         }
 

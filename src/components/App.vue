@@ -1,11 +1,17 @@
 <template>
   <div class="app">
 
-    <div>
-      <b-modal id="load" title="Load State Machine" v-model="showLoad">
-        <MultiSelect @select="load" :options="savedFileNames()" />
-      </b-modal>
-    </div>
+    <b-modal id="load"
+             title="Load State Machine"
+             v-model="showLoad"
+             :x-bus="bus">
+      <MultiSelect @select="load" :options="savedFileNames()" />
+    </b-modal>
+
+    <ShowCode name="showCode"
+              :value="theCode"
+              title="State Machine Code"
+              :x-bus="bus" />
 
     <div>
       <b-modal id="delete"
@@ -16,92 +22,125 @@
       </b-modal>
     </div>
 
-    <div class="row">
-      <div class="col">
-        <div class="app-controls">
-          <div class="icons">
-          <span class="icon" @click="create()">
-            <v-icon name="regular/file" scale="1.4" />
-          </span>
-            <span :class="['icon', dirty?'dirty':'']" @click="save()">
-            <v-icon name="save" scale="1.5" />
-          </span>
-            <span class="icon" v-b-modal.load>
-            <v-icon name="file" scale="1.3" />
-          </span>
-            <span class="icon" v-b-modal.delete>
-            <v-icon name="trash-alt" scale="1.3" />
-          </span>
+    <div class="main">
+      <div class="row">
+        <div class="col">
+          <div class="app-controls">
+            <div class="icons">
+
+              <div class="icon" @click="create()" title="Create">
+                <v-icon name="regular/file" />
+              </div>
+              <div class="icon" v-b-modal.load title="Load">
+                <v-icon name="file" />
+              </div>
+
+              <div class="separator"></div>
+
+              <div class="icon" v-b-modal.delete title="Delete">
+                <v-icon name="trash-alt" />
+              </div>
+
+              <div class="icon" @click="onShowCode" title="Show Code">
+                <v-icon name="code" />
+              </div>
+              <div :class="['icon', dirty?'dirty':'']"
+                   @click="save()"
+                   title="Save">
+                <v-icon name="save" />
+              </div>
+
+              <LabelEdit class="name" v-model="name" placeholder="Name..." />
+            </div>
           </div>
-          <LabelEdit class="name"
-                     type="text"
-                     v-model="name"
-                     placeholder="Name..." />
         </div>
       </div>
-    </div>
 
-    <div class="row">
-      <div class="col">
+      <div class="row">
 
-        <div class="header">
-          <label>State Machine Rules</label>
-          <span class="icons">
-            <span class="icon" @click="addHandler">
-              <font-awesome-icon icon="plus" size="sm" />
+        <div class="col left">
+          <b-tabs v-model="stateTab">
+            <b-tab title="Initial State" active>
+              <VueCodeMirror v-model="initialState"
+                             ref="initialState"
+                             name="initialData"
+                             mode="javascript"
+                             theme="midnight"
+                             :x-bus="bus"
+                             @blur="sanitize"
+                             :lineNumbers="true" />
+            </b-tab>
+            <b-tab title="Current State">
+              <VueCodeMirror v-model="currentState"
+                             ref="currentState"
+                             name="currentState"
+                             mode="javascript"
+                             theme="midnight"
+                             :x-bus="bus"
+                             :read-only="true"
+                             :lineNumbers="true" />
+            </b-tab>
+          </b-tabs>
+          <b-tabs v-model="dataTab">
+            <b-tab title="Initial Data" active>
+              <VueCodeMirror v-model="initialData"
+                             ref="initialData"
+                             name="initialData"
+                             mode="javascript"
+                             theme="midnight"
+                             :x-bus="bus"
+                             @blur="formatInitialData"
+                             :lineNumbers="true" />
+            </b-tab>
+            <b-tab title="Current Data">
+              <VueCodeMirror v-model="currentData"
+                             ref="currentData"
+                             name="currentData"
+                             mode="javascript"
+                             theme="midnight"
+                             :x-bus="bus"
+                             @blur="formatCurrentData"
+                             :lineNumbers="true" />
+            </b-tab>
+          </b-tabs>
+          <div class="header">
+            <label>Initial Code</label>
+          </div>
+          <VueCodeMirror v-model="initialCode"
+                         ref="initialCode"
+                         name="initialCode"
+                         mode="javascript"
+                         theme="midnight"
+                         @blur="formatCode"
+                         :x-bus="bus"
+                         :lineNumbers="true" />
+          <div class="header">State Transitions</div>
+          <Transition class="transition" :transitions="transitions" />
+
+        </div>
+        <div class="col right">
+
+          <div class="header">
+            <label>State Machine Rules</label>
+            <span class="icons">
+              <span class="icon" @click="addHandler">
+                <font-awesome-icon icon="plus" size="sm" />
+              </span>
             </span>
-          </span>
+          </div>
+
+          <div class="handlers list-group" id="handlers" ref="handlers">
+            <VueHandler v-for="h in sortedHandlers"
+                        :key="h.id"
+                        :index="h.index"
+                        :odd="h.index%2 === 1"
+                        v-on:remove="removeHandler(h.index)"
+                        :x-bus="bus"
+                        :name="`handler-${h.index}`"
+                        v-model="h.handler" />
+          </div>
         </div>
 
-        <div class="handlers list-group" id="handlers" ref="handlers">
-          <Handler v-for="h in sortedHandlers"
-                   :key="h.id"
-                   :index="h.index"
-                   :odd="h.index%2 === 1"
-                   v-on:remove="removeHandler(h.index)"
-                   v-model="h.handler" />
-        </div>
-      </div>
-
-      <div class="col">
-        <b-tabs>
-          <b-tab title="Initial State" active>
-            <VueCodeMirror v-model="initialState"
-                           name="initialData"
-                           mode="javascript"
-                           theme="midnight"
-                           @blur="sanitize"
-                           :lineNumbers="true" />
-          </b-tab>
-          <b-tab title="Current State">
-            <VueCodeMirror v-model="currentState"
-                           name="currentState"
-                           mode="javascript"
-                           theme="midnight"
-                           :read-only="true"
-                           :lineNumbers="true" />
-          </b-tab>
-        </b-tabs>
-
-        <b-tabs>
-          <b-tab title="Initial Data" active>
-            <VueCodeMirror v-model="initialData"
-                           name="initialData"
-                           mode="javascript"
-                           theme="midnight"
-                           :lineNumbers="true" />
-          </b-tab>
-          <b-tab title="Current Data">
-            <VueCodeMirror v-model="currentData"
-                           name="currentData"
-                           mode="javascript"
-                           theme="midnight"
-                           :lineNumbers="true" />
-          </b-tab>
-        </b-tabs>
-
-        <div class="header">State Transitions</div>
-        <Transition class="transition" :transitions="transitions" />
       </div>
     </div>
 
@@ -112,7 +151,7 @@
                  @input="onInput"
                  :value="result"
                  :pending="cmdPending"
-                 :command="termCommand"
+                 :x-bus="bus"
                  prompt="> " />
       </div>
     </div>
@@ -137,31 +176,44 @@
         from '../../../vue-resize-on-event/src/VueResizeOnEvent'
     import { SmSim } from "../SmSim";
     import {
-        DefaultHandler, IndexedHandler, SmData, StateTransition
+        DefaultHandler, Handler, IndexedHandler, SmData, StateTransition
     } from "../types";
-    import { quote } from '../util'
-    import Handler from './Handler.vue';
+    import { format, quote } from '../util'
+    // import BModal from 'bootstrap-vue/src/components/modal/modal'
+    import BModal2 from './BootstrapModal.vue'
+    import VueHandler from './Handler.vue';
+    import ShowCode from './ShowCode.vue'
     import Transition from "./Transition";
     import VueCodeMirror from './VueCodeMirror.vue'
     import VueTerm from './VueTerm.vue'
 
     const Sortable = require('sortablejs')
     const uniqid = require('uniqid')
+    const stringify = require("json-stringify-pretty-compact")
+
 
     const MIN_VERSION = 1
+
+
+    function handlerCode(h: Handler): string {
+        let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
+        return `[${route},${h.handler}]`
+    }
 
     @Component({
         name: 'App',
         components: {
-            Transition, Handler,
+            ShowCode,
+            Transition, VueHandler,
             VueCodeMirror,
             VueTerm,
             LabelEdit,
             MultiSelect,
             'b-modal': BModal,
+            'b-modal2': BModal2,
             'b-btn': BButton,
             'b-tabs': BTabs,
-            'b-tab': BTab
+            'b-tab': BTab,
         },
         directives: {
             'b-modal': BModalDirective,
@@ -171,6 +223,12 @@
     })
     export default class App extends Vue {
         handlers: Array<IndexedHandler> = []
+
+        bus = new Vue()
+
+        stateTab = 0
+
+        dataTab = 0
 
         showLoad: boolean = false
 
@@ -190,6 +248,8 @@
 
         initialState = 'initial'
 
+        initialCode = ''
+
         currentState = ''
 
         transitions: Array<StateTransition> = []
@@ -198,12 +258,12 @@
 
         dirty = false
 
-        termCommand = ''
-
         // noinspection JSUnusedGlobalSymbols
         $refs!: {
             handlers: HTMLElement,
-            load: BModal
+            load: BModal,
+            initialState: VueCodeMirror,
+            currentState: VueCodeMirror,
         }
 
         @Lifecycle mounted() {
@@ -223,17 +283,36 @@
             this.sim.stateListener =
                 (state: State, prev: State, data: any, event: Event,
                     handlerIndex: number) => {
-                    self.currentData = JSON.stringify(data, null, 2)
+                    self.currentData = stringify(data, {maxLength: 40})
                     self.currentState = stateRoute(state)
                     self.transitions.push(
                         {state, prev, data, event, handlerIndex})
+                    self.stateTab = 1
+                    self.dataTab = 1
                 }
+
+            this.sim.errorListener = console.log
+
             this.createNew()
             this.sanitize()
-            this.dirty = false
+            this.clearDirty()
         }
 
-        @Watch('handlers')
+        clearDirty() {
+            setTimeout(() => this.dirty = false, 100)
+        }
+
+        @Watch('stateTab')
+        stateTabChanged() {
+            this.bus.$emit('refresh')
+        }
+
+        @Watch('dataTab')
+        dataTabChanged() {
+            this.bus.$emit('refresh')
+        }
+
+        @Watch('handlers', {deep: true})
         handlersChanged() {
             this.dirty = true
         }
@@ -243,9 +322,19 @@
             this.dirty = true
         }
 
+        @Watch('initialCode')
+        initialCodeChanged() {
+            this.dirty = true
+        }
+
         @Watch('initialData')
         initialDataChanged() {
             this.dirty = true
+        }
+
+        onShowCode() {
+            console.log(0)
+            this.bus.$emit('showCode:show')
         }
 
         get sortedTransitions() {
@@ -254,6 +343,26 @@
 
         get sortedHandlers() {
             return this.handlers.sort((a, b) => a.index - b.index)
+        }
+
+        get theCode(): string {
+            let data: SmData = this.toObject()
+            const handlers = data.handlers.map(x => handlerCode(x.handler))
+            let code = `
+          sm = new StateMachine( {
+            handlers: [${handlers}],
+            initialState: ${data.initialState},
+            initialData: ${data.initialData},
+          })
+
+          call = sm.call.bind( sm )
+          cast = sm.cast.bind( sm )
+          if (stateHandler) sm.on( 'state', stateHandler )
+          if (errorHandler) sm.on('error', errorHandler)
+          sm.startSM()
+          ${data.initialCode}
+`
+            return format(code)
         }
 
         sanitize() {
@@ -270,6 +379,22 @@
             return list
         }
 
+        formatCode() {
+            this.initialCode = format(this.initialCode)
+        }
+
+        formatInitialData() {
+            // try {
+            //     this.initialData = stringify(JSON.parse(this.initialData))
+            // } catch (e) {
+            //
+            // }
+        }
+
+        formatCurrentData() {
+            // this.currentData = stringify(this.currentData)
+        }
+
         nameChanged(v: string) {
             this.name = v
         }
@@ -279,8 +404,7 @@
             if (line.length != 0) {
                 switch (line) {
                     case 'clear':
-                        this.transitions = []
-                        this.termCommand = 'clear'
+                        this.clear()
                         break;
 
                     case 'init':
@@ -289,7 +413,7 @@
 
                     default:
                         try {
-                            result = String(this.sim.exec(line))
+                            result = this.sim.exec(line)
                         }
                         catch (e) {
                             console.log(e)
@@ -297,7 +421,8 @@
                         }
                 }
             }
-            this.$emit('result', result)
+            result = result === undefined ? '' : String(result)
+            this.bus.$emit('repl:result', result)
         }
 
         get fileName(): string {
@@ -305,19 +430,23 @@
         }
 
         load(name: string) {
-            let data = store.get(`sm-${name}`)
-            this.fromObject(data)
-            this.showLoad = false
-            this.name = name
-            this.dirty = false
-            this.initSim()
+            try {
+                let data = store.get(`sm-${name}`)
+                this.fromObject(data)
+                this.showLoad = false
+                this.name = name
+                this.initSim()
+                this.clearDirty()
+            } catch (e) {
+                console.log(e)
+            }
         }
 
         save(n?: string) {
             let name = n || this.name
             console.log(`saving ${name}`)
             store.set(`sm-${name}`, this.toObject())
-            this.dirty = false
+            this.clearDirty()
         }
 
         deleteFile() {
@@ -330,6 +459,7 @@
             this.handlers = []
             this.initialState = 'initial'
             this.initialData = 'undefined'
+            this.initialCode = ''
             this.initSim()
         }
 
@@ -341,6 +471,7 @@
             this.handlers = obj.handlers
             this.initialState = obj.initialState
             this.initialData = obj.initialData
+            this.initialCode = obj.initialCode || ''
             this.revision = obj.revision || 1
         }
 
@@ -349,6 +480,7 @@
                 handlers: this.handlers,
                 initialState: this.initialState,
                 initialData: this.initialData,
+                initialCode: this.initialCode,
                 formatVersion: MIN_VERSION,
                 revision: this.revision
             }
@@ -364,6 +496,7 @@
         }
 
         addHandler() {
+            console.log('adding handler')
             this.handlers.push({
                 id: uniqid(),
                 index: this.handlers.length,
@@ -371,9 +504,16 @@
             })
         }
 
+        clear() {
+            this.transitions = []
+            this.bus.$emit('repl:clear')
+            this.bus.$emit('transitions:clear')
+        }
+
         initSim() {
             this.sanitize()
-            this.sim.init(this.toObject())
+            this.clear()
+            this.sim.init(this.theCode)
         }
     }
 </script>
@@ -388,15 +528,30 @@
     position: relative;
   }
 
+  .main {
+    padding-bottom: 150px;
+  }
+
   .app-controls {
     width: 100%;
     margin-bottom: 10px;
     & > .icons {
       display: inline-block;
       & > .icon {
+        display: inline;
+        height: 30px;
+        line-height: 30px;
         margin-right: 10px;
       }
-      border-right: solid 3px $neutral;
+      .separator {
+        vertical-align: middle;
+        margin: 0 20px 0 10px;
+        border-left: solid 1px $darker;
+        border-right: solid 1px $neutral;
+        height: 25px;
+        width: 1px;
+        display: inline-block;
+      }
     }
   }
 
@@ -405,15 +560,24 @@
   }
 
   .name {
+    color: $lighter;
     display: inline-block;
     font-family: $display_font;
-    font-size: 20px;
-
+    font-size: 25px;
+    text-transform: uppercase;
+    font-weight: 200;
+    line-height: 30px;
+    vertical-align: middle;
+    margin-right: 20px;
   }
 
   input.vlabeledit-input {
     height: 30px;
     border: none;
+  }
+
+  .left, .right {
+    max-width: 50%;
   }
 
   .events, .initialData, .output, .currentData {
@@ -431,10 +595,6 @@
       box-shadow: inset 0 0 15px $highlight_color;
     }
   }
-
-  /*.initialData, .currentData {*/
-  /*margin-bottom: 10px;*/
-  /*}*/
 
   #transitions {
     background-color: $code_bg;
@@ -503,6 +663,10 @@
   #load {
     color: $lightest;
     font-family: $display_font;
+  }
+
+  .app {
+    font-family: $display_font;
     .modal-title {
       font-size: 16px;
       font-weight: 400;
@@ -523,6 +687,11 @@
     }
   }
 
+  .nav-tabs {
+    border-bottom: solid 1px $dark;
+    height: 40px;
+  }
+
   .nav-tabs .nav-item {
     font-family: $display_font;
     font-size: 16px;
@@ -541,7 +710,12 @@
     border: none;
   }
 
-  .cm-s-initialData, .cm-s-currentData, .cm-s-currentState, .cm-s-events {
+  .cm-s-initialCode,
+  .cm-s-initialData,
+  .cm-s-currentData,
+  .cm-s-currentState,
+  .cm-s-showCode,
+  .cm-s-events {
     font-family: $code_font, monospace;
     font-weight: 300;
     font-size: 16px;
