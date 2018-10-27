@@ -18,43 +18,26 @@
 //  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
-import quoteIt from 'quote-it'
-import { Handler } from "./types"
 
-const prettier = require('prettier/standalone')
-const plugins = [require('prettier/parser-babylon')]
 
-function unquote(str: string, type: string): string {
-    if (str.startsWith(type) && str.endsWith(type)) {
-        str = str.substr(1, str.length - 2)
+import * as store from 'store'
+import { ActionTree } from "vuex"
+import { RootState, SmData, SmState } from "../../types"
+
+export const actions: ActionTree<SmState, RootState> = {
+    load({commit}, name): any {
+        try {
+            let data: SmData = store.get(`sm-${name}`)
+            commit('dataLoaded', data)
+        } catch (e) {
+            console.log(e)
+            commit('loadError', e)
+        }
+    },
+
+    save({commit, state}) {
+        console.log(`saving ${state.name}`)
+        store.set(`sm-${name}`, state.data)
+        commit('dataSaved')
     }
-    return str
-}
-
-export function quote(str: string, type: string = '"'): string {
-    if (str.length === 0) {
-        return str;
-    }
-
-    str = unquote(str, '"')
-    str = unquote(str, "'")
-    return quoteIt(str, type)
-}
-
-export function handlerCode(h: Handler): string {
-    let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
-    return `[${route},${h.handler}]`
-}
-
-export function format(src: string): string {
-    let code = prettier.format(src, {
-        parser: 'babylon',
-        plugins,
-        printWidth: 40,
-        semi: false
-    })
-    if (code.startsWith(';')) {
-        code = code.substr(1)
-    }
-    return code.trim()
 }

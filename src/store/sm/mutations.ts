@@ -18,43 +18,24 @@
 //  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
-import quoteIt from 'quote-it'
-import { Handler } from "./types"
 
-const prettier = require('prettier/standalone')
-const plugins = [require('prettier/parser-babylon')]
+import { MutationTree } from "vuex"
+import { SmData, SmState } from "../../types"
 
-function unquote(str: string, type: string): string {
-    if (str.startsWith(type) && str.endsWith(type)) {
-        str = str.substr(1, str.length - 2)
+export const mutations: MutationTree<SmState> = {
+    dataLoaded(state: SmState, data: SmData) {
+        state.error = undefined
+        state.data = data
+        state.dirty = false
+    },
+
+    loadError(state: SmState, error) {
+        state.data = undefined
+        state.error = error
+    },
+
+    saved(state: SmState) {
+        state.dirty = false
     }
-    return str
-}
+};
 
-export function quote(str: string, type: string = '"'): string {
-    if (str.length === 0) {
-        return str;
-    }
-
-    str = unquote(str, '"')
-    str = unquote(str, "'")
-    return quoteIt(str, type)
-}
-
-export function handlerCode(h: Handler): string {
-    let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
-    return `[${route},${h.handler}]`
-}
-
-export function format(src: string): string {
-    let code = prettier.format(src, {
-        parser: 'babylon',
-        plugins,
-        printWidth: 40,
-        semi: false
-    })
-    if (code.startsWith(';')) {
-        code = code.substr(1)
-    }
-    return code.trim()
-}

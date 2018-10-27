@@ -18,43 +18,22 @@
 //  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
-import quoteIt from 'quote-it'
-import { Handler } from "./types"
+import Vuex, { StoreOptions } from 'vuex'
+import { RootState } from "../types"
+import { sm } from "./sm/index"
 
-const prettier = require('prettier/standalone')
-const plugins = [require('prettier/parser-babylon')]
+const options: StoreOptions<RootState> = {
+    strict: process.env.NODE_ENV !== 'production',
 
-function unquote(str: string, type: string): string {
-    if (str.startsWith(type) && str.endsWith(type)) {
-        str = str.substr(1, str.length - 2)
+    state: {
+        version: "1.0.0"
+    },
+
+    modules: {
+        sm
     }
-    return str
 }
 
-export function quote(str: string, type: string = '"'): string {
-    if (str.length === 0) {
-        return str;
-    }
 
-    str = unquote(str, '"')
-    str = unquote(str, "'")
-    return quoteIt(str, type)
-}
+export default new Vuex.Store<RootState>(options)
 
-export function handlerCode(h: Handler): string {
-    let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
-    return `[${route},${h.handler}]`
-}
-
-export function format(src: string): string {
-    let code = prettier.format(src, {
-        parser: 'babylon',
-        plugins,
-        printWidth: 40,
-        semi: false
-    })
-    if (code.startsWith(';')) {
-        code = code.substr(1)
-    }
-    return code.trim()
-}

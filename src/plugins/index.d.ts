@@ -18,43 +18,24 @@
 //  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
-import quoteIt from 'quote-it'
-import { Handler } from "./types"
 
-const prettier = require('prettier/standalone')
-const plugins = [require('prettier/parser-babylon')]
 
-function unquote(str: string, type: string): string {
-    if (str.startsWith(type) && str.endsWith(type)) {
-        str = str.substr(1, str.length - 2)
-    }
-    return str
-}
+declare module 'plugins/VueWatchAll' {
+    import Vue, { PluginFunction, PluginObject, WatchHandler } from 'vue';
 
-export function quote(str: string, type: string = '"'): string {
-    if (str.length === 0) {
-        return str;
+    class VueWatchAll implements PluginObject<{}> {
+        [key: string]: any;
+
+        public install: PluginFunction<{}>;
     }
 
-    str = unquote(str, '"')
-    str = unquote(str, "'")
-    return quoteIt(str, type)
-}
+    const VuePlugin: VueWatchAll;
 
-export function handlerCode(h: Handler): string {
-    let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
-    return `[${route},${h.handler}]`
-}
+    export default VuePlugin;
 
-export function format(src: string): string {
-    let code = prettier.format(src, {
-        parser: 'babylon',
-        plugins,
-        printWidth: 40,
-        semi: false
-    })
-    if (code.startsWith(';')) {
-        code = code.substr(1)
+
+    // Interfaces
+    export interface WatchAll extends Vue {
+        $watchAll: <T>(props: Array<string>, cb: WatchHandler<T>) => void
     }
-    return code.trim()
 }

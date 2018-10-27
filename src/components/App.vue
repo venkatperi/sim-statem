@@ -172,14 +172,11 @@
     import Vue from 'vue';
     import MultiSelect from 'vue-multiselect'
     import LabelEdit from '../../../label-edit/src/LabelEdit.vue'
-    import VueResizeOnEvent
-        from '../../../vue-resize-on-event/src/VueResizeOnEvent'
     import { SmSim } from "../SmSim";
     import {
         DefaultHandler, Handler, IndexedHandler, SmData, StateTransition
     } from "../types";
     import { format, quote } from '../util'
-    // import BModal from 'bootstrap-vue/src/components/modal/modal'
     import BModal2 from './BootstrapModal.vue'
     import VueHandler from './Handler.vue';
     import ShowCode from './ShowCode.vue'
@@ -195,10 +192,7 @@
     const MIN_VERSION = 1
 
 
-    function handlerCode(h: Handler): string {
-        let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
-        return `[${route},${h.handler}]`
-    }
+
 
     @Component({
         name: 'App',
@@ -217,8 +211,6 @@
         },
         directives: {
             'b-modal': BModalDirective,
-            ...VueResizeOnEvent('value'),
-            ...VueResizeOnEvent('input'),
         }
     })
     export default class App extends Vue {
@@ -265,6 +257,8 @@
             initialState: VueCodeMirror,
             currentState: VueCodeMirror,
         }
+
+        @State()
 
         @Lifecycle mounted() {
             // noinspection JSUnusedGlobalSymbols
