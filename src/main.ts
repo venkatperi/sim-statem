@@ -8,7 +8,6 @@ import BootstrapVue from 'bootstrap-vue'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import 'bootstrap/dist/css/bootstrap.css'
 import Vue from "vue";
-import Vuex from "vuex";
 
 import Icon from 'vue-awesome/components/Icon.vue'
 import 'vue-awesome/icons/caret-down'
@@ -25,14 +24,15 @@ import 'vue-awesome/icons/times-circle'
 import 'vue-awesome/icons/trash-alt'
 import { VueResizeDirectives } from 'vue-resize-on-event'
 import VueRouter from "vue-router";
+import Vuex from "vuex";
 import App from "./components/App.vue";
 import AppCore from "./components/AppCore.vue";
 import AppFooter from "./components/AppFooter.vue";
 import AppMenu from "./components/AppMenu.vue";
+import store from './store/index'
 
 const {FontAwesomeIcon} = require("@fortawesome/vue-fontawesome");
 
-Vue.use(Vuex);
 Vue.use(BootstrapVue);
 Vue.component('v-icon', Icon)
 library.add(faGithub, faWikipediaW, faLink, faTimesCircle, faPlus, faVial,
@@ -57,6 +57,7 @@ Vue.use(VueRouter);
 
 let app = new Vue({
     router,
+    store,
     el: "#app"
 });
 

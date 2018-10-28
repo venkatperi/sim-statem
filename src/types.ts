@@ -1,11 +1,11 @@
 import { Event, State } from "gen-statem"
 
 export interface RootState {
-    version: string,
+    sm: SmState
 }
 
 export const DefaultHandler: Handler = {
-    event: '*_',
+    event: 'cast',
     context: '*_',
     state: '*_',
     handler: '() => keepState()'
@@ -33,31 +33,41 @@ export type StateTransition = {
 }
 
 export interface SmData {
-    formatVersion?: number,
+    formatVersion: number,
 
-    handlers: Array<IndexedHandler>,
+    handlers: Array<Handler>,
 
-    initialCode?: string,
+    initialCode: string,
 
     initialData: string,
 
     initialState: string,
 
-    revision?: number
+    revision: number
 }
 
 export interface SmState {
-    currentData: '',
+    currentData: string,
 
-    currentState: '',
-
-    data?: SmData,
+    currentState: string,
 
     dirty: boolean,
 
     error?: Error,
 
+    formatVersion: number,
+
+    handlers: Array<IndexedHandler>,
+
+    initialCode: string,
+
+    initialData: string,
+
+    initialState: string,
+
     name: string,
+
+    revision: number
 
     transitions: Array<StateTransition>
 }

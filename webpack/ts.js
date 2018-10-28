@@ -24,7 +24,7 @@ module.exports = ( config ) => {
   config.module
     .rule( 'ts' )
     .test( /\.tsx?$/ )
-    .exclude.add( /node_modules/ ).end()
+    .exclude .add( /node_modules/ ) .end()
     .use( 'ts' )
     .loader( 'ts-loader' )
     .when( config.module.rules.has( 'vue' ),

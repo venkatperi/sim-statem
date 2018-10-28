@@ -21,8 +21,14 @@
 import quoteIt from 'quote-it'
 import { Handler } from "./types"
 
+const _stringify = require("json-stringify-pretty-compact")
+
 const prettier = require('prettier/standalone')
 const plugins = [require('prettier/parser-babylon')]
+
+export function stringify(object: any): string {
+    return _stringify(object)
+}
 
 function unquote(str: string, type: string): string {
     if (str.startsWith(type) && str.endsWith(type)) {
@@ -42,8 +48,9 @@ export function quote(str: string, type: string = '"'): string {
 }
 
 export function handlerCode(h: Handler): string {
+    // console.log(h)
     let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
-    return `[${route},${h.handler}]`
+    return `[${route}, ${h.handler}]`
 }
 
 export function format(src: string): string {

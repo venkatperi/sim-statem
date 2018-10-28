@@ -1,3 +1,4 @@
+<!--suppress TypeScriptValidateTypes -->
 <template>
   <codemirror v-on="$listeners"
               v-bind="$attrs"
@@ -13,6 +14,7 @@
     import 'codemirror/lib/codemirror.css'
     import 'codemirror/mode/javascript/javascript'
     import 'codemirror/theme/midnight.css'
+    import Vue from 'vue'
     import codemirror from 'vue-codemirror/src/codemirror.vue'
     import { CodeMirrorOptions } from "../CodeMirrorTypes";
     import Bussed from "../traits/Bussed";
@@ -26,6 +28,10 @@
         },
     })
     export default class VueCodeMirror extends Mixin(Named, Bussed) {
+
+        bus!: Vue
+
+        name!: string
 
         code = ""
 
@@ -123,7 +129,6 @@
             this.loadMode()
             this.loadTheme()
             this.code = this.value
-            console.log(this.name)
             this.bus.$on('refresh', this.refresh)
             this.bus.$on(`${this.name}:refresh`, this.refresh)
             this.bus.$on(`${this.name}:addMarker`, this.addMarker)
@@ -133,7 +138,6 @@
         }
 
         addMarker(line: number, gutter: string, el: HTMLElement) {
-            console.log(line, gutter, el)
             if (this.cm) {
                 this.cm.setGutterMarker(line, gutter, el)
             }

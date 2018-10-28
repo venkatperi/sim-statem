@@ -6,11 +6,6 @@ import { VM } from './VM'
 
 const {StateMachine} = require('gen-statem')
 
-function handlerCode(h: Handler): string {
-    let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
-    return `[${route},${h.handler}]`
-}
-
 export class SmSim {
     vm: VM
 

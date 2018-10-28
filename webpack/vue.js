@@ -29,6 +29,7 @@ module.exports = ( config ) => {
   config.module
     .rule( 'vue' )
     .test( /\.vue$/ )
+    .exclude .add( /\.html$/ ) .end()
     .use( 'vue' )
     .loader( 'vue-loader' )
 

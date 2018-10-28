@@ -1,3 +1,4 @@
+<!--suppress JSMethodCanBeStatic, TypeScriptValidateTypes -->
 <template>
   <div class="app">
 
@@ -89,7 +90,6 @@
                              mode="javascript"
                              theme="midnight"
                              :x-bus="bus"
-                             @blur="formatInitialData"
                              :lineNumbers="true" />
             </b-tab>
             <b-tab title="Current Data">
@@ -99,7 +99,6 @@
                              mode="javascript"
                              theme="midnight"
                              :x-bus="bus"
-                             @blur="formatCurrentData"
                              :lineNumbers="true" />
             </b-tab>
           </b-tabs>
@@ -168,31 +167,23 @@
     import { Event, State } from "gen-statem";
     import { stateRoute } from "gen-statem/dist/src/State";
     import { SortableEvent } from "sortablejs";
-    import * as store from 'store'
     import Vue from 'vue';
     import MultiSelect from 'vue-multiselect'
+    import { Store } from "vuex";
     import LabelEdit from '../../../label-edit/src/LabelEdit.vue'
     import { SmSim } from "../SmSim";
-    import {
-        DefaultHandler, Handler, IndexedHandler, SmData, StateTransition
-    } from "../types";
+    import { IndexedHandler, SmState, StateTransition } from "../types";
     import { format, quote } from '../util'
     import BModal2 from './BootstrapModal.vue'
     import VueHandler from './Handler.vue';
     import ShowCode from './ShowCode.vue'
-    import Transition from "./Transition";
+    import Transition from "./Transition.vue";
     import VueCodeMirror from './VueCodeMirror.vue'
     import VueTerm from './VueTerm.vue'
+    import * as LocalStore from 'store'
 
     const Sortable = require('sortablejs')
-    const uniqid = require('uniqid')
     const stringify = require("json-stringify-pretty-compact")
-
-
-    const MIN_VERSION = 1
-
-
-
 
     @Component({
         name: 'App',
@@ -214,8 +205,6 @@
         }
     })
     export default class App extends Vue {
-        handlers: Array<IndexedHandler> = []
-
         bus = new Vue()
 
         stateTab = 0
@@ -228,29 +217,15 @@
 
         result = ''
 
-        revision: number = 0
-
         cmdPending = false
 
         sim = new SmSim()
 
-        initialData = '{}'
-
-        currentData = '123'
-
-        initialState = 'initial'
-
-        initialCode = ''
-
-        currentState = ''
-
-        transitions: Array<StateTransition> = []
-
-        name = 'Untitled'
-
-        dirty = false
+        // noinspection JSUnusedGlobalSymbols
+        $store!: Store<SmState>
 
         // noinspection JSUnusedGlobalSymbols
+        // noinspection JSAnnotator
         $refs!: {
             handlers: HTMLElement,
             load: BModal,
@@ -258,7 +233,77 @@
             currentState: VueCodeMirror,
         }
 
-        @State()
+        get handlers(): Array<IndexedHandler> {
+            return this.$store.state.handlers
+        }
+
+        get initialState(): string {
+            return this.$store.state.initialState
+        }
+
+        get initialData(): string {
+            return this.$store.state.initialData
+        }
+
+        get initialCode(): string {
+            return this.$store.state.initialCode
+        }
+
+        get currentState(): string {
+            return this.$store.state.currentState
+        }
+
+        get currentData(): string {
+            return this.$store.state.currentData
+        }
+
+        get name(): string {
+            return this.$store.state.name
+        }
+
+        get dirty(): boolean {
+            return this.$store.state.dirty
+        }
+
+        get transitions(): StateTransition[] {
+            return this.$store.state.transitions
+        }
+
+        get revision(): number {
+            return this.$store.state.revision
+        }
+
+        get formatVersion(): number {
+            return this.$store.state.formatVersion
+        }
+
+        get theCode(): string {
+            return this.$store.getters.code
+        }
+
+        set initialData(value: string) {
+            this.$store.commit('setInitialData', value)
+        }
+
+        set initialState(value: string) {
+            this.$store.commit('setInitialState', value)
+        }
+
+        set initialCode(value: string) {
+            this.$store.commit('setInitialCode', value)
+        }
+
+        set currentData(value: string) {
+            this.$store.commit('setCurrentData', value)
+        }
+
+        set currentState(value: string) {
+            this.$store.commit('setCurrentState', value)
+        }
+
+        set name(value: string) {
+            this.$store.commit('setName', value)
+        }
 
         @Lifecycle mounted() {
             // noinspection JSUnusedGlobalSymbols
@@ -292,9 +337,6 @@
             this.clearDirty()
         }
 
-        clearDirty() {
-            setTimeout(() => this.dirty = false, 100)
-        }
 
         @Watch('stateTab')
         stateTabChanged() {
@@ -306,28 +348,11 @@
             this.bus.$emit('refresh')
         }
 
-        @Watch('handlers', {deep: true})
-        handlersChanged() {
-            this.dirty = true
-        }
-
-        @Watch('initialState')
-        initialStateChanged() {
-            this.dirty = true
-        }
-
-        @Watch('initialCode')
-        initialCodeChanged() {
-            this.dirty = true
-        }
-
-        @Watch('initialData')
-        initialDataChanged() {
-            this.dirty = true
+        clearDirty() {
+            this.$store.commit('clearDirty')
         }
 
         onShowCode() {
-            console.log(0)
             this.bus.$emit('showCode:show')
         }
 
@@ -339,33 +364,13 @@
             return this.handlers.sort((a, b) => a.index - b.index)
         }
 
-        get theCode(): string {
-            let data: SmData = this.toObject()
-            const handlers = data.handlers.map(x => handlerCode(x.handler))
-            let code = `
-          sm = new StateMachine( {
-            handlers: [${handlers}],
-            initialState: ${data.initialState},
-            initialData: ${data.initialData},
-          })
-
-          call = sm.call.bind( sm )
-          cast = sm.cast.bind( sm )
-          if (stateHandler) sm.on( 'state', stateHandler )
-          if (errorHandler) sm.on('error', errorHandler)
-          sm.startSM()
-          ${data.initialCode}
-`
-            return format(code)
-        }
-
         sanitize() {
             this.initialState = quote(this.initialState)
         }
 
         savedFileNames(): string[] {
             let list: string[] = []
-            store.each((v: any, k: string) => {
+            LocalStore.each((v: any, k: string) => {
                 if (k.startsWith('sm-')) {
                     list.push(k.substring(3))
                 }
@@ -375,22 +380,6 @@
 
         formatCode() {
             this.initialCode = format(this.initialCode)
-        }
-
-        formatInitialData() {
-            // try {
-            //     this.initialData = stringify(JSON.parse(this.initialData))
-            // } catch (e) {
-            //
-            // }
-        }
-
-        formatCurrentData() {
-            // this.currentData = stringify(this.currentData)
-        }
-
-        nameChanged(v: string) {
-            this.name = v
         }
 
         onInput(line: string) {
@@ -423,83 +412,36 @@
             return `sm-${this.name}`
         }
 
-        load(name: string) {
-            try {
-                let data = store.get(`sm-${name}`)
-                this.fromObject(data)
-                this.showLoad = false
-                this.name = name
-                this.initSim()
-                this.clearDirty()
-            } catch (e) {
-                console.log(e)
-            }
+        async load(name: string) {
+            await this.$store.dispatch('load', name)
+            this.showLoad = false
         }
 
-        save(n?: string) {
-            let name = n || this.name
-            console.log(`saving ${name}`)
-            store.set(`sm-${name}`, this.toObject())
-            this.clearDirty()
+        save() {
+            this.$store.dispatch('save')
         }
 
         deleteFile() {
-            store.remove(this.fileName)
-            this.createNew()
+            this.$store.dispatch('deleteFile')
         }
 
         createNew() {
-            this.name = 'Untitled'
-            this.handlers = []
-            this.initialState = 'initial'
-            this.initialData = 'undefined'
-            this.initialCode = ''
-            this.initSim()
-        }
-
-        fromObject(obj: SmData) {
-            if (obj.formatVersion && obj.formatVersion < 1) {
-                throw new Error('Unsupported file version')
-            }
-
-            this.handlers = obj.handlers
-            this.initialState = obj.initialState
-            this.initialData = obj.initialData
-            this.initialCode = obj.initialCode || ''
-            this.revision = obj.revision || 1
-        }
-
-        toObject(): SmData {
-            return {
-                handlers: this.handlers,
-                initialState: this.initialState,
-                initialData: this.initialData,
-                initialCode: this.initialCode,
-                formatVersion: MIN_VERSION,
-                revision: this.revision
-            }
+            this.$store.dispatch('initialize')
         }
 
         removeHandler(index: number) {
-            this.handlers.splice(index, 1)
-            this.reindex()
+            this.$store.commit('removeHandler', index)
         }
 
         reindex() {
-            this.handlers.forEach((h, i) => h.index = i)
+            this.$store.commit('reindex')
         }
 
         addHandler() {
-            console.log('adding handler')
-            this.handlers.push({
-                id: uniqid(),
-                index: this.handlers.length,
-                handler: Object.assign({}, DefaultHandler)
-            })
+            this.$store.dispatch('createHandler')
         }
 
         clear() {
-            this.transitions = []
             this.bus.$emit('repl:clear')
             this.bus.$emit('transitions:clear')
         }
@@ -566,6 +508,8 @@
   }
 
   input.vlabeledit-input {
+    text-transform: uppercase;
+    font-weight: 200;
     height: 30px;
     border: none;
   }
@@ -645,12 +589,15 @@
   @import '../styles/theme';
 
   .name > input.vlabeledit-input {
+    text-transform: uppercase;
+    font-weight: 200;
     height: 30px;
     background: $less_neutral;
     border: solid 1px $dark;
     border-top: solid 1px $bg_color;
     &:focus {
       box-shadow: inset 0 0 6px $highlight_color;
+      border: none;
     }
   }
 
