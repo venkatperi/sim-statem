@@ -71,8 +71,11 @@ const store = new Vuex.Store<SmState>({
           sm.startSM()
           ${s.initialCode}
 `
-            // console.log(code)
-            code = format(code)
+            try {
+                code = format(code)
+            } catch (e) {
+
+            }
             return code
         },
     },
@@ -101,7 +104,6 @@ const store = new Vuex.Store<SmState>({
 
         reindexHandlers(state: SmState) {
             state.handlers.forEach((h, i) => h.index = i)
-            state.dirty = true
         },
 
         removeHandler(state: SmState, index: number) {

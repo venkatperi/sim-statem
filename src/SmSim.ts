@@ -1,12 +1,18 @@
 import { keepState, nextState, repeatState } from "gen-statem"
-import { ErrorLine } from "tslint/lib/verify/lines"
 import { RunningScriptOptions } from "vm"
-import { ErrorListener, Handler, SmData, StateChangeListener } from "./types"
+import { ErrorListener, StateChangeListener } from "./types"
 import { VM } from './VM'
 
 const {StateMachine} = require('gen-statem')
 
+export type SimButton = {
+    name: string,
+    command: string
+}
+
 export class SmSim {
+    buttons: SimButton[] = []
+
     vm: VM
 
     constructor() {
@@ -15,8 +21,14 @@ export class SmSim {
             keepState,
             nextState,
             repeatState,
+            buttons: this.buttons,
             sm: undefined
         })
+    }
+
+    set errorListener(handler: ErrorListener) {
+        this.set('errorHandler', handler)
+        this.exec(`if (sm) sm.on( 'error', errorHandler )`)
     }
 
     /**
@@ -36,11 +48,6 @@ export class SmSim {
         this.exec(`if (sm) sm.on( 'state', stateHandler )`)
     }
 
-    set errorListener(handler: ErrorListener) {
-        this.set('errorHandler', handler)
-        this.exec(`if (sm) sm.on( 'error', errorHandler )`)
-    }
-
     exec(cmd: string, opts?: RunningScriptOptions): any {
         return this.vm.exec(cmd, opts)
     }
@@ -55,6 +62,7 @@ export class SmSim {
      * @param code
      */
     init(code: string) {
+        this.buttons = []
         this.exec(code)
     }
 

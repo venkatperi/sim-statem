@@ -29,7 +29,7 @@
           <div class="app-controls">
             <div class="icons">
 
-              <div class="icon" @click="create()" title="Create">
+              <div class="icon" @click="createNew" title="Create">
                 <v-icon name="regular/file" />
               </div>
               <div class="icon" v-b-modal.load title="Load">
@@ -144,7 +144,14 @@
     </div>
 
     <div class="repl-outer">
-      <div class="header">REPL</div>
+      <div class="header">REPL
+        <b-btn v-for="b in buttons"
+               size="sm"
+               variant="primary"
+               @click="exec(b.command)">
+          {{b.name}}
+        </b-btn>
+      </div>
       <div class="repl-inner">
         <VueTerm class="repl"
                  @input="onInput"
@@ -167,11 +174,12 @@
     import { Event, State } from "gen-statem";
     import { stateRoute } from "gen-statem/dist/src/State";
     import { SortableEvent } from "sortablejs";
+    import * as LocalStore from 'store'
     import Vue from 'vue';
     import MultiSelect from 'vue-multiselect'
     import { Store } from "vuex";
     import LabelEdit from '../../../label-edit/src/LabelEdit.vue'
-    import { SmSim } from "../SmSim";
+    import { SimButton, SmSim } from "../SmSim";
     import { IndexedHandler, SmState, StateTransition } from "../types";
     import { format, quote } from '../util'
     import BModal2 from './BootstrapModal.vue'
@@ -180,7 +188,6 @@
     import Transition from "./Transition.vue";
     import VueCodeMirror from './VueCodeMirror.vue'
     import VueTerm from './VueTerm.vue'
-    import * as LocalStore from 'store'
 
     const Sortable = require('sortablejs')
     const stringify = require("json-stringify-pretty-compact")
@@ -206,6 +213,8 @@
     })
     export default class App extends Vue {
         bus = new Vue()
+
+        theCode = ''
 
         stateTab = 0
 
@@ -277,7 +286,7 @@
             return this.$store.state.formatVersion
         }
 
-        get theCode(): string {
+        getSource(): string {
             return this.$store.getters.code
         }
 
@@ -305,6 +314,10 @@
             this.$store.commit('setName', value)
         }
 
+        get buttons(): SimButton[] {
+            return this.sim.get('buttons')
+        }
+
         @Lifecycle mounted() {
             // noinspection JSUnusedGlobalSymbols
             new Sortable(this.$refs.handlers, {
@@ -324,7 +337,7 @@
                     handlerIndex: number) => {
                     self.currentData = stringify(data, {maxLength: 40})
                     self.currentState = stateRoute(state)
-                    self.transitions.push(
+                    self.$store.dispatch('addTransition',
                         {state, prev, data, event, handlerIndex})
                     self.stateTab = 1
                     self.dataTab = 1
@@ -353,6 +366,7 @@
         }
 
         onShowCode() {
+            this.theCode = this.getSource()
             this.bus.$emit('showCode:show')
         }
 
@@ -365,7 +379,10 @@
         }
 
         sanitize() {
-            this.initialState = quote(this.initialState)
+            let s = quote(this.initialState)
+            if (s !== this.initialState) {
+                this.initialState = s
+            }
         }
 
         savedFileNames(): string[] {
@@ -412,9 +429,14 @@
             return `sm-${this.name}`
         }
 
+        exec(cmd: string) {
+            this.sim.exec(cmd)
+        }
+
         async load(name: string) {
             await this.$store.dispatch('load', name)
             this.showLoad = false
+            console.log(this.buttons)
         }
 
         save() {
@@ -442,6 +464,7 @@
         }
 
         clear() {
+            this.$store.dispatch('clearTransitions')
             this.bus.$emit('repl:clear')
             this.bus.$emit('transitions:clear')
         }
@@ -449,7 +472,8 @@
         initSim() {
             this.sanitize()
             this.clear()
-            this.sim.init(this.theCode)
+            this.sim.init(this.getSource())
+            console.log(this.buttons)
         }
     }
 </script>
@@ -570,13 +594,6 @@
     }
   }
 
-  button {
-    font-size: 18px;
-    padding: 5px 15px;
-    margin: 10px 0 15px;
-    color: #555;
-  }
-
   .handlers {
     border-radius: 0;
   }
@@ -671,6 +688,13 @@
     left: 0;
     right: 0;
     background: black;
+    button {
+      &:first-child {
+        margin-left: 20px;
+      }
+      margin: 2px;
+      padding: 2px 5px;
+    }
   }
 
   .repl-inner {
