@@ -206,12 +206,12 @@
 
         loadMode() {
             // noinspection TypeScriptUnresolvedFunction
-            require(`codemirror/mode/${this.mode}/${this.mode}`)
+            // require(`codemirror/mode/${this.mode}/${this.mode}`)
         }
 
         loadTheme() {
             // noinspection TypeScriptUnresolvedFunction
-            require(`codemirror/theme/${this.theme}.css`)
+            // require(`codemirror/theme/${this.theme}.css`)
         }
 
         onReady(cm: Editor) {

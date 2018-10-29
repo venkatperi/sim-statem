@@ -2,6 +2,7 @@
 
 $text_color: darken($lighter, 25%);
 $code_bg: #0f192a;
+$heading_color: $neutral;
 $heading_bg: $even_darker;
 $border_bg: $dark;
 
@@ -10,13 +11,34 @@ $code_font: "Source Code Pro";
 $highlight_color: #4674C3;
 $bg_color: lighten($dark, 10%);
 
+$complementary1: #729025;
+$complementary2: #CD6D5E;
+
 .fa-icon {
   width: auto;
-  height: 1.3em;
-
   max-width: 100%;
   max-height: 100%;
   svg {
     vertical-align: middle;
   }
+}
+
+.fa-icon .large {
+  height: 1.3em;
+}
+
+a {
+  color: $complementary1;
+}
+
+a:hover {
+  color: $complementary2 !important;
+}
+
+
+%codemirror-common {
+  font-family: $code_font, monospace;
+  font-weight: 400;
+  font-size: 0.9rem;
+  height: auto;
 }

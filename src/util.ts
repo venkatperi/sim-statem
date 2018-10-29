@@ -47,9 +47,12 @@ export function quote(str: string, type: string = '"'): string {
     return quoteIt(str, type)
 }
 
+export function handlerRoute(h: Handler): string {
+    return "\"" + [h.event, h.context, h.state].join("#") + "\""
+}
+
 export function handlerCode(h: Handler): string {
-    // console.log(h)
-    let route = "\"" + [h.event, h.context, h.state].join("#") + "\""
+    let route = handlerRoute(h)
     return `[${route}, ${h.handler}]`
 }
 
@@ -65,3 +68,4 @@ export function format(src: string): string {
     }
     return code.trim()
 }
+

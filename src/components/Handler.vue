@@ -1,3 +1,4 @@
+<!--suppress TypeScriptValidateTypes -->
 <template>
   <div :class="['handler-group', 'list-group-item']">
     <div class="controls-area" @dblclick="toggleCollapse">
@@ -7,13 +8,13 @@
       <span class="index" v-html="index + 1"></span>
       <div class="icons">
         <span class="icon" @click="toggleVisible()">
-          <font-awesome-icon :icon="visible?'eye':'eye-slash'" size="xs" />
+          <v-icon name="eye-slash" />
         </span>
         <span class="icon" @click="$emit('test')">
-          <font-awesome-icon icon="vial" size="xs" />
+          <v-icon name="vial" />
         </span>
         <span class="icon" @click="$emit('remove')">
-          <font-awesome-icon icon="times-circle" size="xs" />
+          <v-icon name="times-circle" />
         </span>
       </div>
     </div>
@@ -26,12 +27,13 @@
              v-resize-on-value />
 
       <span class="hash">
-        <font-awesome-icon icon="hashtag" size="xs" />
+
+        <v-icon name="hashtag" />
       </span>
       <input class="context " v-model="context" placeholder="context" />
 
       <span class="hash">
-        <font-awesome-icon icon="hashtag" size="xs" />
+        <v-icon name="hashtag" />
       </span>
       <input class="state" v-model="state" placeholder="state" />
     </div>
@@ -51,26 +53,13 @@
 
 <script lang="ts">
     import { Component, Lifecycle, Mixin, p, Prop, Watch } from "av-ts";
+    import Vue from 'vue'
     import Bussed from "../traits/Bussed";
     import Named from "../traits/Named";
     import { Handler } from "../types";
-    import { format } from '../util'
+    import { format, handlerRoute } from '../util'
+    import VueErrorMarker from './ErrorMarker.vue'
     import CodeMirror from './VueCodeMirror.vue'
-
-    const {inspect} = require('util')
-
-    const HANDLER: RegExp = /^\[([^,]+),(.*)]$/g;
-
-    function errorMarker(msg: string) {
-        var marker = document.createElement("div");
-        marker.style.color = "#f22";
-        marker.style.margin = "2px 0px 0px 8px"
-        marker.style.fontSize = "15px";
-        marker.title = msg
-        marker.innerHTML = "❌";
-        marker.setAttribute('data-tooltip', msg)
-        return marker;
-    }
 
     const events: string[] = [
         "cast",
@@ -93,6 +82,10 @@
         }
     })
     export default class VueHandler extends Mixin(Named, Bussed) {
+        bus!: Vue
+
+        name!: string
+
         event = ""
 
         context = ""
@@ -107,22 +100,14 @@
 
         collapsed = false
 
-        @Prop
-        value = p({
+        @Prop value = p({
             type: Object,
-            default: {
-                event: '*_',
-                context: '*_',
-                state: '*_',
-                handler: '() => keepState()'
-            }
+            required: true
         });
 
-        @Prop
-        index = p({type: Number})
+        @Prop index = p({type: Number})
 
-        @Prop
-        odd = p({
+        @Prop odd = p({
             type: Boolean,
             default: false
         });
@@ -130,6 +115,7 @@
         @Lifecycle
         created() {
             this.valueChanged();
+            this.bus.$on('collapse', () => this.collapsed = true )
         }
 
         @Watch("value")
@@ -172,16 +158,20 @@
                 this.bus.$emit(`${this.name}:clearGutter`, 'errors')
             } catch (e) {
                 console.log(this.name)
+                let marker = new VueErrorMarker({
+                    propsData: {title: e.message}
+                })
+                marker.$mount()
+                console.log(marker)
                 this.bus.$emit(`${this.name}:addMarker`,
                     Number(e.loc.start.line) - 1, "errors",
-                    errorMarker(e.message))
+                    // errorMarker(e.message))
+                    marker.$el)
             }
         }
 
         updateRoute() {
-            this.route = "\""
-                + [this.event, this.context, this.state].join("#")
-                + "\"";
+            this.route = handlerRoute(this)
         }
 
         valueChanged(): void {
@@ -350,10 +340,7 @@
   @import '../styles/theme';
 
   #handlers .CodeMirror {
-    font-family: $code_font, monospace;
-    font-weight: 300;
-    font-size: 16px;
-    height: auto;
+    @extend %codemirror-common;
 
     &.CodeMirror-focused {
       box-shadow: inset 0 0 6px $highlight_color;

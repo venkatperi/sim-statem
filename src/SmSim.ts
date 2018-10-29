@@ -1,6 +1,6 @@
 import { keepState, nextState, repeatState } from "gen-statem"
 import { RunningScriptOptions } from "vm"
-import { ErrorListener, StateChangeListener } from "./types"
+import { CmdListener, ErrorListener, StateChangeListener } from "./types"
 import { VM } from './VM'
 
 const {StateMachine} = require('gen-statem')
@@ -11,17 +11,17 @@ export type SimButton = {
 }
 
 export class SmSim {
-    buttons: SimButton[] = []
 
     vm: VM
 
     constructor() {
         this.vm = new VM({
             StateMachine,
+            setImmediate,
             keepState,
             nextState,
             repeatState,
-            buttons: this.buttons,
+            buttons: [],
             sm: undefined
         })
     }
@@ -30,6 +30,13 @@ export class SmSim {
         this.set('errorHandler', handler)
         this.exec(`if (sm) sm.on( 'error', errorHandler )`)
     }
+
+
+    set cmdListener(handler: CmdListener) {
+        this.set('cmdHandler', handler)
+        this.exec(`exec = (...args) => { if (cmdHandler) cmdHandler(...args) }`)
+    }
+
 
     /**
      *
@@ -62,7 +69,6 @@ export class SmSim {
      * @param code
      */
     init(code: string) {
-        this.buttons = []
         this.exec(code)
     }
 

@@ -6,7 +6,7 @@
              title="Load State Machine"
              v-model="showLoad"
              :x-bus="bus">
-      <MultiSelect @select="load" :options="savedFileNames()" />
+      <MultiSelect @select="load" :options="fileNames" />
     </b-modal>
 
     <ShowCode name="showCode"
@@ -32,7 +32,7 @@
               <div class="icon" @click="createNew" title="Create">
                 <v-icon name="regular/file" />
               </div>
-              <div class="icon" v-b-modal.load title="Load">
+              <div class="icon" @click="onLoadDialog" title="Load">
                 <v-icon name="file" />
               </div>
 
@@ -60,84 +60,95 @@
       <div class="row">
 
         <div class="col left">
-          <b-tabs v-model="stateTab">
-            <b-tab title="Initial State" active>
-              <VueCodeMirror v-model="initialState"
-                             ref="initialState"
-                             name="initialData"
-                             mode="javascript"
-                             theme="midnight"
-                             :x-bus="bus"
-                             @blur="sanitize"
-                             :lineNumbers="true" />
-            </b-tab>
-            <b-tab title="Current State">
-              <VueCodeMirror v-model="currentState"
-                             ref="currentState"
-                             name="currentState"
-                             mode="javascript"
-                             theme="midnight"
-                             :x-bus="bus"
-                             :read-only="true"
-                             :lineNumbers="true" />
-            </b-tab>
-          </b-tabs>
-          <b-tabs v-model="dataTab">
-            <b-tab title="Initial Data" active>
-              <VueCodeMirror v-model="initialData"
-                             ref="initialData"
-                             name="initialData"
-                             mode="javascript"
-                             theme="midnight"
-                             :x-bus="bus"
-                             :lineNumbers="true" />
-            </b-tab>
-            <b-tab title="Current Data">
-              <VueCodeMirror v-model="currentData"
-                             ref="currentData"
-                             name="currentData"
-                             mode="javascript"
-                             theme="midnight"
-                             :x-bus="bus"
-                             :lineNumbers="true" />
-            </b-tab>
-          </b-tabs>
-          <div class="header">
-            <label>Initial Code</label>
-          </div>
-          <VueCodeMirror v-model="initialCode"
-                         ref="initialCode"
-                         name="initialCode"
-                         mode="javascript"
-                         theme="midnight"
-                         @blur="formatCode"
-                         :x-bus="bus"
-                         :lineNumbers="true" />
-          <div class="header">State Transitions</div>
-          <Transition class="transition" :transitions="transitions" />
+          <section>
+            <b-tabs v-model="stateTab">
+              <b-tab title="Initial State" active>
+                <VueCodeMirror v-model="initialState"
+                               ref="initialState"
+                               name="initialData"
+                               mode="javascript"
+                               theme="midnight"
+                               :x-bus="bus"
+                               @blur="sanitize"
+                               :lineNumbers="true" />
+              </b-tab>
+              <b-tab title="Current State">
+                <VueCodeMirror v-model="currentState"
+                               ref="currentState"
+                               name="currentState"
+                               mode="javascript"
+                               theme="midnight"
+                               :x-bus="bus"
+                               :read-only="true"
+                               :lineNumbers="true" />
+              </b-tab>
+            </b-tabs>
+          </section>
+
+          <section>
+            <b-tabs v-model="dataTab">
+              <b-tab title="Initial Data" active>
+                <VueCodeMirror v-model="initialData"
+                               ref="initialData"
+                               name="initialData"
+                               mode="javascript"
+                               theme="midnight"
+                               :x-bus="bus"
+                               :lineNumbers="true" />
+              </b-tab>
+              <b-tab title="Current Data">
+                <VueCodeMirror v-model="currentData"
+                               ref="currentData"
+                               name="currentData"
+                               mode="javascript"
+                               theme="midnight"
+                               :x-bus="bus"
+                               :lineNumbers="true" />
+              </b-tab>
+            </b-tabs>
+          </section>
+
+          <section>
+            <div class="header">State Transitions</div>
+            <Transition class="transition" :transitions="transitions" />
+          </section>
 
         </div>
         <div class="col right">
 
-          <div class="header">
-            <label>State Machine Rules</label>
-            <span class="icons">
-              <span class="icon" @click="addHandler">
-                <font-awesome-icon icon="plus" size="sm" />
+          <section>
+            <div class="header" @dblclick="toggleAllCollapsed">
+              <label>State Machine Rules</label>
+              <span class="icons">
+                <span class="icon" @click="addHandler">
+                  <v-icon name="plus" />
+                </span>
               </span>
-            </span>
-          </div>
+            </div>
 
-          <div class="handlers list-group" id="handlers" ref="handlers">
-            <VueHandler v-for="h in sortedHandlers"
-                        :key="h.id"
-                        :index="h.index"
-                        :odd="h.index%2 === 1"
-                        v-on:remove="removeHandler(h.index)"
-                        :x-bus="bus"
-                        :name="`handler-${h.index}`"
-                        v-model="h.handler" />
-          </div>
+            <div class="handlers list-group" id="handlers" ref="handlers">
+              <VueHandler v-for="h in sortedHandlers"
+                          :key="h.id"
+                          :index="h.index"
+                          :odd="h.index%2 === 1"
+                          v-on:remove="removeHandler(h.index)"
+                          :x-bus="bus"
+                          :name="`handler-${h.index}`"
+                          v-model="h.handler" />
+            </div>
+          </section>
+
+          <section class="initial-code">
+            <div class="header"><label>Initial Code</label></div>
+            <VueCodeMirror v-model="initialCode"
+                           ref="initialCode"
+                           name="initialCode"
+                           mode="javascript"
+                           theme="midnight"
+                           @blur="formatCode"
+                           :x-bus="bus"
+                           :lineNumbers="true" />
+          </section>
         </div>
 
       </div>
@@ -148,13 +159,12 @@
         <b-btn v-for="b in buttons"
                size="sm"
                variant="primary"
-               @click="exec(b.command)">
-          {{b.name}}
+               @click="exec(b.command)"> {{b.name}}
         </b-btn>
       </div>
       <div class="repl-inner">
         <VueTerm class="repl"
-                 @input="onInput"
+                 @input="onCommand"
                  :value="result"
                  :pending="cmdPending"
                  :x-bus="bus"
@@ -215,6 +225,8 @@
         bus = new Vue()
 
         theCode = ''
+
+        fileNames: string[] = []
 
         stateTab = 0
 
@@ -344,10 +356,11 @@
                 }
 
             this.sim.errorListener = console.log
+            this.sim.cmdListener = (cmd) => self.onCommand(cmd, true)
 
             this.createNew()
-            this.sanitize()
             this.clearDirty()
+            this.initSim()
         }
 
 
@@ -363,6 +376,11 @@
 
         clearDirty() {
             this.$store.commit('clearDirty')
+        }
+
+        onLoadDialog() {
+            this.fileNames = this.getFileNames()
+            this.showLoad = true
         }
 
         onShowCode() {
@@ -385,7 +403,7 @@
             }
         }
 
-        savedFileNames(): string[] {
+        getFileNames(): string[] {
             let list: string[] = []
             LocalStore.each((v: any, k: string) => {
                 if (k.startsWith('sm-')) {
@@ -399,10 +417,14 @@
             this.initialCode = format(this.initialCode)
         }
 
-        onInput(line: string) {
+        onCommand(cmd: string, print = false) {
+            if (print) {
+                this.bus.$emit('repl:print', cmd)
+            }
             let result = ''
-            if (line.length != 0) {
-                switch (line) {
+
+            if (cmd.length != 0) {
+                switch (cmd) {
                     case 'clear':
                         this.clear()
                         break;
@@ -413,7 +435,7 @@
 
                     default:
                         try {
-                            result = this.sim.exec(line)
+                            result = this.sim.exec(cmd)
                         }
                         catch (e) {
                             console.log(e)
@@ -436,7 +458,7 @@
         async load(name: string) {
             await this.$store.dispatch('load', name)
             this.showLoad = false
-            console.log(this.buttons)
+            this.initSim()
         }
 
         save() {
@@ -473,7 +495,10 @@
             this.sanitize()
             this.clear()
             this.sim.init(this.getSource())
-            console.log(this.buttons)
+        }
+
+        toggleAllCollapsed() {
+            this.bus.$emit('collapse')
         }
     }
 </script>
@@ -482,6 +507,10 @@
 <style lang="scss" scoped>
 
   @import '../styles/theme';
+
+  section.initial-code {
+    margin-top: 20px;
+  }
 
   .app {
     padding: 0 15px;
@@ -520,12 +549,12 @@
   }
 
   .name {
-    color: $lighter;
+    color: $neutral;
     display: inline-block;
     font-family: $display_font;
-    font-size: 25px;
+    font-size: 1.4rem;
     text-transform: uppercase;
-    font-weight: 200;
+    font-weight: 400;
     line-height: 30px;
     vertical-align: middle;
     margin-right: 20px;
@@ -539,11 +568,11 @@
   }
 
   .left, .right {
-    max-width: 50%;
+    /*max-width: 50%;*/
   }
 
   .events, .initialData, .output, .currentData {
-    width: 100%;
+    /*width: 100%;*/
     resize: none;
     background-color: $code_bg;
     color: $text_color;
@@ -565,17 +594,14 @@
     color: $text_color;
   }
 
-  .transition {
-  }
-
   .header {
     font-family: $display_font;
-    font-size: 16px;
+    font-size: 0.9rem;
     font-weight: 400;
     text-transform: uppercase;
-    color: lighten($text_color, 20%);
     width: 100%;
     background: $heading_bg;
+    color: $heading_color;
     height: 40px;
     line-height: 40px;
     padding: 0 20px;
@@ -588,7 +614,7 @@
       .icon {
         color: $text_color;
         &:hover {
-          color: $lighter;
+          color: $complementary2;
         }
       }
     }
@@ -646,26 +672,43 @@
   }
 
   .nav-tabs {
+    background: $heading_bg;
+    border: none;
     border-bottom: solid 1px $dark;
     height: 40px;
   }
 
+  .nav-tabs .nav-link {
+    border: none;
+    height: 40px;
+    border-bottom: solid 1px $dark;
+    &:hover {
+      border: none;
+      border-bottom: solid 1px $dark;
+    }
+  }
+
   .nav-tabs .nav-item {
     font-family: $display_font;
-    font-size: 16px;
+    font-size: 0.9rem;
     font-weight: 400;
     text-transform: uppercase;
-    color: lighten($text_color, 20%);
-    background: $heading_bg;
+    color: $heading_color;
+    background: $code_bg;
     border: none;
     border-radius: 0;
   }
 
   .nav-tabs .nav-item .active {
     border-radius: 0;
-    background: lighten($heading_bg, 20%);
+    background: lighten($code_bg, 10%);
     color: lighten($text_color, 20%);
     border: none;
+    border-bottom: solid 1px $dark;
+    &:hover {
+      border: none;
+      border-bottom: solid 1px $dark;
+    }
   }
 
   .cm-s-initialCode,
@@ -674,10 +717,7 @@
   .cm-s-currentState,
   .cm-s-showCode,
   .cm-s-events {
-    font-family: $code_font, monospace;
-    font-weight: 300;
-    font-size: 16px;
-    height: auto;
+    @extend %codemirror-common;
     margin-bottom: 20px;
   }
 
@@ -692,7 +732,7 @@
       &:first-child {
         margin-left: 20px;
       }
-      margin: 2px;
+      margin: 2px 10px 2px 2px;
       padding: 2px 5px;
     }
   }

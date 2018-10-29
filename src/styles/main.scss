@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css?family=Source+Code+Pro:300,400,500|Share+Tech+Mono|News+Cycle|Work+Sans:300,400,600');
 @import 'variables';
 @import 'theme';
-//@import '../../node_modules/toastr/toastr';
 @import './tooltip.scss';
 
 html,
@@ -10,8 +9,13 @@ body {
   height: 100%;
 }
 
+html {
+  font-size: 1em;
+}
+
 body {
   color: $text-color;
+  font-size: 100%;
   width: 100%;
   background-color: darken($border_bg, 2%) !important;
 }

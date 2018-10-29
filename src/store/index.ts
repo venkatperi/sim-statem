@@ -64,6 +64,13 @@ const store = new Vuex.Store<SmState>({
             initialData: ${s.initialData},
           })
 
+          exec = (...args) => { if (cmdHandler) setImmediate(cmdHandler,...args) }
+          buttons = [ {
+            name: 'init',
+            command: 'exec("init")'
+          }
+          ]
+          button = (name, command) => buttons.push({name, command})
           call = sm.call.bind( sm )
           cast = sm.cast.bind( sm )
           if (stateHandler) sm.on( 'state', stateHandler )
@@ -89,6 +96,7 @@ const store = new Vuex.Store<SmState>({
             state.handlers.push({
                 id: uniqId(),
                 index: state.handlers.length,
+                collapsed: false,
                 handler
             })
             state.dirty = true
@@ -100,6 +108,12 @@ const store = new Vuex.Store<SmState>({
 
         clearTransitions(state: SmState) {
             state.transitions = []
+        },
+
+        collapseAll(state: SmState) {
+            for (let h of state.handlers) {
+                h.collapsed = true
+            }
         },
 
         reindexHandlers(state: SmState) {

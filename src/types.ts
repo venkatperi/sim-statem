@@ -21,6 +21,7 @@ export type Handler = {
 export type IndexedHandler = {
     id: string
     index: number
+    collapsed: boolean,
     handler: Handler
 }
 
@@ -69,10 +70,13 @@ export interface SmState {
 
     revision: number
 
-    transitions: Array<StateTransition>
+    transitions: Array<StateTransition>,
+
 }
 
 export type ErrorListener = (...args: Array<any>) => void
+
+export type CmdListener = (...args: Array<any>) => void
 
 export type StateChangeListener = (state: State, prev: State, data: any,
     event: Event, handlerIndex: number) => void
