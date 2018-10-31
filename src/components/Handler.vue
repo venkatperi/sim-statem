@@ -13,13 +13,13 @@
         <span class="icon" @click="$emit('test')">
           <v-icon name="vial" />
         </span>
-        <span class="icon" @click="$emit('remove')">
+        <span class="icon" @click="remove">
           <v-icon name="times-circle" />
         </span>
       </div>
     </div>
 
-    <div class="route">
+    <div :class="['route', collapsed?'hide':'']">
       <input :class="['event', eventValid?'':'error']"
              v-model="event"
              placeholder="event"
@@ -74,6 +74,7 @@
         return events.indexOf(e) >= 0 || e.startsWith("call");
     };
 
+
     @Component({
         name: "Handler",
         inheritAttrs: false,
@@ -100,6 +101,8 @@
 
         collapsed = false
 
+        $messageBox!: (title: string, message: string) => Promise<any>
+
         @Prop value = p({
             type: Object,
             required: true
@@ -115,7 +118,7 @@
         @Lifecycle
         created() {
             this.valueChanged();
-            this.bus.$on('collapse', () => this.collapsed = true )
+            this.bus.$on('handler:collapse', () => this.collapsed = true)
         }
 
         @Watch("value")
@@ -150,6 +153,16 @@
 
         get eventValid(): boolean {
             return validateEvent(this.event)
+        }
+
+        async remove() {
+            try {
+                let res = await this.$messageBox('Delete Handler',
+                    `Are you sure you want to delete handler #${this.index}`)
+                this.$emit('remove')
+            } catch (e) {
+
+            }
         }
 
         format() {
@@ -229,7 +242,7 @@
   .state {
     font-family: $code_font, monospace;
     font-weight: 500;
-    font-size: 17px;
+    font-size: 0.9rem;
     height: 32px;
     line-height: 32px;
     text-align: center;

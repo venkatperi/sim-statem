@@ -19,7 +19,7 @@
     import Bussed from "../traits/Bussed";
     import Named from "../traits/Named";
     import Valued from "../traits/Valued";
-    import BModal from './BootstrapModal.vue'
+    import BModal from './misc/BootstrapModal.vue'
     import VueCodeMirror from './VueCodeMirror.vue'
 
     @Component({

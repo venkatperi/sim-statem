@@ -1,3 +1,24 @@
+<!-- // Copyright 2018, Venkat Peri. -->
+<!-- // -->
+<!-- // Permission is hereby granted, free of charge, to any person obtaining a -->
+<!-- // copy of this software and associated documentation files (the -->
+<!-- // "Software"), to deal in the Software without restriction, including -->
+<!-- // without limitation the rights to use, copy, modify, merge, publish, -->
+<!-- // distribute, sublicense, and/or sell copies of the Software, and to permit -->
+<!-- // persons to whom the Software is furnished to do so, subject to the -->
+<!-- // following conditions: -->
+<!-- // -->
+<!-- // The above copyright notice and this permission notice shall be included -->
+<!-- // in all copies or substantial portions of the Software. -->
+<!-- // -->
+<!-- // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS -->
+<!-- // OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF -->
+<!-- // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN -->
+<!-- // NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, -->
+<!-- // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR -->
+<!-- // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE -->
+<!-- // USE OR OTHER DEALINGS IN THE SOFTWARE. -->
+
 <!--suppress JSMethodCanBeStatic, TypeScriptValidateTypes -->
 <template>
   <div class="app">
@@ -14,14 +35,12 @@
               title="State Machine Code"
               :x-bus="bus" />
 
-    <div>
-      <b-modal id="delete"
-               @ok="deleteFile"
-               v-model="showDelete"
-               title="Delete State Machine?">
-        Are you sure you want to delete {{ name }}?
-      </b-modal>
-    </div>
+    <b-modal id="delete"
+             @ok="deleteFile"
+             v-model="showDelete"
+             title="Delete State Machine?">
+      Are you sure you want to delete {{ name }}?
+    </b-modal>
 
     <div class="main">
       <div class="row">
@@ -65,7 +84,7 @@
               <b-tab title="Initial State" active>
                 <VueCodeMirror v-model="initialState"
                                ref="initialState"
-                               name="initialData"
+                               name="initialState"
                                mode="javascript"
                                theme="midnight"
                                :x-bus="bus"
@@ -156,7 +175,8 @@
 
     <div class="repl-outer">
       <div class="header">REPL
-        <b-btn v-for="b in buttons"
+        <b-btn v-for="(b, index) in buttons"
+               :key="index"
                size="sm"
                variant="primary"
                @click="exec(b.command)"> {{b.name}}
@@ -164,13 +184,12 @@
       </div>
       <div class="repl-inner">
         <VueTerm class="repl"
-                 @input="onCommand"
-                 :value="result"
-                 :pending="cmdPending"
+                 :input-handler="onCommand"
                  :x-bus="bus"
                  prompt="> " />
       </div>
     </div>
+
   </div>
 </template>
 
@@ -188,16 +207,15 @@
     import Vue from 'vue';
     import MultiSelect from 'vue-multiselect'
     import { Store } from "vuex";
-    import LabelEdit from '../../../label-edit/src/LabelEdit.vue'
-    import { SimButton, SmSim } from "../SmSim";
-    import { IndexedHandler, SmState, StateTransition } from "../types";
-    import { format, quote } from '../util'
-    import BModal2 from './BootstrapModal.vue'
-    import VueHandler from './Handler.vue';
-    import ShowCode from './ShowCode.vue'
-    import Transition from "./Transition.vue";
-    import VueCodeMirror from './VueCodeMirror.vue'
-    import VueTerm from './VueTerm.vue'
+    import LabelEdit from '../../../../label-edit/src/LabelEdit.vue'
+    import { SimButton, SmSim } from "../../SmSim";
+    import { IndexedHandler, SmState, StateTransition } from "../../types";
+    import { format, quote } from '../../util'
+    import VueHandler from '../Handler.vue';
+    import ShowCode from '../ShowCode.vue'
+    import Transition from "../Transition.vue";
+    import VueCodeMirror from '../VueCodeMirror.vue'
+    import VueTerm from '../VueTerm.vue'
 
     const Sortable = require('sortablejs')
     const stringify = require("json-stringify-pretty-compact")
@@ -205,14 +223,9 @@
     @Component({
         name: 'App',
         components: {
-            ShowCode,
-            Transition, VueHandler,
-            VueCodeMirror,
-            VueTerm,
-            LabelEdit,
-            MultiSelect,
+            ShowCode, Transition, VueHandler, VueCodeMirror, VueTerm,
+            LabelEdit, MultiSelect,
             'b-modal': BModal,
-            'b-modal2': BModal2,
             'b-btn': BButton,
             'b-tabs': BTabs,
             'b-tab': BTab,
@@ -235,10 +248,6 @@
         showLoad: boolean = false
 
         showDelete: boolean = false
-
-        result = ''
-
-        cmdPending = false
 
         sim = new SmSim()
 
@@ -330,39 +339,17 @@
             return this.sim.get('buttons')
         }
 
-        @Lifecycle mounted() {
-            // noinspection JSUnusedGlobalSymbols
-            new Sortable(this.$refs.handlers, {
-                onEnd: (e: SortableEvent) => {
-                    let a = this.handlers.find(x => x.index === e.oldIndex)
-                    let b = this.handlers.find(x => x.index === e.newIndex)
-                    if (a && b) {
-                        let x = a.index
-                        a.index = b.index
-                        b.index = x
-                    }
-                },
-            })
-            let self = this
-            this.sim.stateListener =
-                (state: State, prev: State, data: any, event: Event,
-                    handlerIndex: number) => {
-                    self.currentData = stringify(data, {maxLength: 40})
-                    self.currentState = stateRoute(state)
-                    self.$store.dispatch('addTransition',
-                        {state, prev, data, event, handlerIndex})
-                    self.stateTab = 1
-                    self.dataTab = 1
-                }
-
-            this.sim.errorListener = console.log
-            this.sim.cmdListener = (cmd) => self.onCommand(cmd, true)
-
-            this.createNew()
-            this.clearDirty()
-            this.initSim()
+        get sortedTransitions() {
+            return [...this.transitions].reverse()
         }
 
+        get sortedHandlers() {
+            return this.handlers.sort((a, b) => a.index - b.index)
+        }
+
+        get fileName(): string {
+            return `sm-${this.name}`
+        }
 
         @Watch('stateTab')
         stateTabChanged() {
@@ -372,6 +359,45 @@
         @Watch('dataTab')
         dataTabChanged() {
             this.bus.$emit('refresh')
+        }
+
+
+        @Lifecycle mounted() {
+            new Sortable(this.$refs.handlers, {
+                onEnd: this.swapHandlers.bind(this),
+            })
+            let self = this
+            this.sim.stateListener = this.stateListener.bind(this)
+            this.sim.errorListener = console.log
+            this.sim.cmdListener = (cmd) => self.onCommand(cmd, true)
+
+            this.createNew()
+            this.clearDirty()
+            this.initSim()
+        }
+
+        swapHandlers(e: SortableEvent) {
+            let a = this.handlers.find(x => x.index === e.oldIndex)
+            let b = this.handlers.find(x => x.index === e.newIndex)
+            if (a && b) {
+                let x = a.index
+                a.index = b.index
+                b.index = x
+            }
+        }
+
+        stateListener(state: State, prev: State, data: any,
+            event: Event, handlerIndex: number) {
+            this.currentData = stringify(data, {maxLength: 40})
+            this.currentState = stateRoute(state)
+            this.$store.dispatch('addTransition',
+                {state, prev, data, event, handlerIndex})
+            this.showCurrentTabs()
+        }
+
+        showCurrentTabs() {
+            this.stateTab = 1
+            this.dataTab = 1
         }
 
         clearDirty() {
@@ -386,14 +412,6 @@
         onShowCode() {
             this.theCode = this.getSource()
             this.bus.$emit('showCode:show')
-        }
-
-        get sortedTransitions() {
-            return [...this.transitions].reverse()
-        }
-
-        get sortedHandlers() {
-            return this.handlers.sort((a, b) => a.index - b.index)
         }
 
         sanitize() {
@@ -417,7 +435,7 @@
             this.initialCode = format(this.initialCode)
         }
 
-        onCommand(cmd: string, print = false) {
+        async onCommand(cmd: string, print = false) {
             if (print) {
                 this.bus.$emit('repl:print', cmd)
             }
@@ -444,11 +462,7 @@
                 }
             }
             result = result === undefined ? '' : String(result)
-            this.bus.$emit('repl:result', result)
-        }
-
-        get fileName(): string {
-            return `sm-${this.name}`
+            return result
         }
 
         exec(cmd: string) {
@@ -477,10 +491,6 @@
             this.$store.commit('removeHandler', index)
         }
 
-        reindex() {
-            this.$store.commit('reindex')
-        }
-
         addHandler() {
             this.$store.dispatch('createHandler')
         }
@@ -498,7 +508,7 @@
         }
 
         toggleAllCollapsed() {
-            this.bus.$emit('collapse')
+            this.bus.$emit('handler:collapse')
         }
     }
 </script>
@@ -506,7 +516,7 @@
 
 <style lang="scss" scoped>
 
-  @import '../styles/theme';
+  @import '../../styles/theme';
 
   section.initial-code {
     margin-top: 20px;
@@ -518,7 +528,7 @@
   }
 
   .main {
-    padding-bottom: 150px;
+    padding-bottom: 210px;
   }
 
   .app-controls {
@@ -628,8 +638,8 @@
 </style>
 
 <style lang="scss">
-  @import "../../node_modules/vue-multiselect/dist/vue-multiselect.min.css";
-  @import '../styles/theme';
+  @import "../../../node_modules/vue-multiselect/dist/vue-multiselect.min.css";
+  @import '../../styles/theme';
 
   .name > input.vlabeledit-input {
     text-transform: uppercase;
@@ -728,6 +738,7 @@
     left: 0;
     right: 0;
     background: black;
+    box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.75);
     button {
       &:first-child {
         margin-left: 20px;

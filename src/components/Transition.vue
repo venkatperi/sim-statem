@@ -54,7 +54,6 @@
 
   .transitions {
     width: 100%;
-    max-width: 100%;
     display: table;
     font-weight: 200;
     font-size: 14px;
@@ -97,6 +96,15 @@
 
   .prev, .current {
     width: 25%;
+  }
+
+  .route {
+    overflow-wrap: break-word;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    -ms-hyphens: auto;
+    hyphens: auto;
+    word-break: break-word;
   }
 
 </style>

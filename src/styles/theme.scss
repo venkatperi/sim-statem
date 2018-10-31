@@ -35,10 +35,36 @@ a:hover {
   color: $complementary2 !important;
 }
 
-
 %codemirror-common {
   font-family: $code_font, monospace;
   font-weight: 400;
   font-size: 0.9rem;
   height: auto;
+}
+
+body {
+  font-family: $display_font;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.modal-content {
+  background: $bg_color;
+}
+
+.modal-header {
+  border-bottom: solid 1px $darker;
+}
+
+.modal-footer {
+  border-top: solid 1px $less_neutral;
+}
+
+.modal-body {
+  border-top: solid 1px $less_neutral;
+  border-bottom: solid 1px $darker;
 }

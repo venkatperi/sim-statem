@@ -25,11 +25,12 @@ import "bootstrap/dist/css/bootstrap.css";
 import Vue from "vue";
 import { VueResizeDirectives } from "vue-resize-on-event";
 import VueRouter from "vue-router";
-import App from "./components/App.vue";
+import App from "./components/main/App.vue";
 import AppCore from "./components/AppCore.vue";
 import AppFooter from "./components/AppFooter.vue";
 import AppMenu from "./components/AppMenu.vue";
 import Icons from "./plugins/icons";
+import MessageBoxPlugin from './plugins/MessageBox/index'
 import store from "./store/index";
 
 const icons = [
@@ -41,6 +42,7 @@ const icons = [
 Vue.use(Icons, icons);
 Vue.use(BootstrapVue);
 Vue.use(VueResizeDirectives, ["input", "value"]);
+Vue.use(MessageBoxPlugin)
 
 Vue.config.productionTip = false;
 

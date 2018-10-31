@@ -20,6 +20,11 @@
         name: 'VueTerm',
     })
     export default class VueTerm extends Vue {
+        @Prop inputHandler = p({
+            type: Function,
+            required: true
+        })
+
         @Prop value = p({
             type: String,
             default: ''
@@ -120,6 +125,7 @@
             if (this.value) {
                 this.$localEcho.println(this.value)
             }
+
             setImmediate(() => this.readInput())
             setImmediate(() => this.fit())
 
@@ -139,6 +145,16 @@
 
             this.bus.$on('repl:clear',
                 () => setTimeout(this.clear.bind(this), 10))
+
+            this.readInput2()
+        }
+
+        print(str: string): void {
+            this.$localEcho.print(str)
+        }
+
+        println(str: string): void {
+            this.$localEcho.println(str)
         }
 
         @Lifecycle beforeDestroy() {
@@ -147,6 +163,23 @@
 
         clear() {
             this.$terminal.clear()
+        }
+
+
+        readInput2() {
+            setImmediate(() => this._readInput2())
+        }
+
+        async _readInput2() {
+            try {
+                let str = await this.$localEcho.read(this.prompt)
+                let res = await this.inputHandler(str)
+                this.println(res)
+
+            } catch (e) {
+
+            }
+            this.readInput2()
         }
 
         readInput() {
