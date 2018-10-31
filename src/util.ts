@@ -1,3 +1,4 @@
+import { uniqId as _uniqId } from "gen-statem/dist/src/util/uniqId"
 //  Copyright 2018, Venkat Peri.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
@@ -19,7 +20,7 @@
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
 import quoteIt from 'quote-it'
-import { Handler } from "./types"
+import { Handler } from "./store/sm/Handler"
 
 const _stringify = require("json-stringify-pretty-compact")
 
@@ -28,6 +29,10 @@ const plugins = [require('prettier/parser-babylon')]
 
 export function stringify(object: any): string {
     return _stringify(object)
+}
+
+export function uniqId(): string {
+    return _uniqId()
 }
 
 function unquote(str: string, type: string): string {

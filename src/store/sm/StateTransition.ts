@@ -18,18 +18,18 @@
 //  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
-import Vue from 'vue'
-import Vuex from 'vuex'
-import { AppState } from "./AppState"
-import sm from './sm'
 
-Vue.use(Vuex)
+import { State } from "gen-statem"
+import Event from "gen-statem/dist/src/event"
 
+export interface StateTransition {
+    state: State
 
-const store = new Vuex.Store<AppState>({
-    modules: {
-        sm
-    }
-})
+    prev?: State
 
-export default store
+    data?: any
+
+    event?: Event
+
+    handlerIndex: number
+}

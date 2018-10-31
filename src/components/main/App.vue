@@ -1,23 +1,4 @@
-<!-- // Copyright 2018, Venkat Peri. -->
-<!-- // -->
-<!-- // Permission is hereby granted, free of charge, to any person obtaining a -->
-<!-- // copy of this software and associated documentation files (the -->
-<!-- // "Software"), to deal in the Software without restriction, including -->
-<!-- // without limitation the rights to use, copy, modify, merge, publish, -->
-<!-- // distribute, sublicense, and/or sell copies of the Software, and to permit -->
-<!-- // persons to whom the Software is furnished to do so, subject to the -->
-<!-- // following conditions: -->
-<!-- // -->
-<!-- // The above copyright notice and this permission notice shall be included -->
-<!-- // in all copies or substantial portions of the Software. -->
-<!-- // -->
-<!-- // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS -->
-<!-- // OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF -->
-<!-- // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN -->
-<!-- // NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, -->
-<!-- // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR -->
-<!-- // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE -->
-<!-- // USE OR OTHER DEALINGS IN THE SOFTWARE. -->
+<!-- // Copyright 2018, Venkat Peri. --><!-- // --><!-- // Permission is hereby granted, free of charge, to any person obtaining a --><!-- // copy of this software and associated documentation files (the --><!-- // "Software"), to deal in the Software without restriction, including --><!-- // without limitation the rights to use, copy, modify, merge, publish, --><!-- // distribute, sublicense, and/or sell copies of the Software, and to permit --><!-- // persons to whom the Software is furnished to do so, subject to the --><!-- // following conditions: --><!-- // --><!-- // The above copyright notice and this permission notice shall be included --><!-- // in all copies or substantial portions of the Software. --><!-- // --><!-- // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS --><!-- // OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF --><!-- // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN --><!-- // NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, --><!-- // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR --><!-- // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE --><!-- // USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 
 <!--suppress JSMethodCanBeStatic, TypeScriptValidateTypes -->
 <template>
@@ -209,13 +190,15 @@
     import { Store } from "vuex";
     import LabelEdit from '../../../../label-edit/src/LabelEdit.vue'
     import { SimButton, SmSim } from "../../SmSim";
-    import { IndexedHandler, SmState, StateTransition } from "../../types";
+    import { AppState } from "../../store/AppState";
+    import { IndexedHandler } from "../../store/sm/IndexedHandler";
+    import { StateTransition } from "../../store/sm/StateTransition";
     import { format, quote } from '../../util'
-    import VueHandler from '../Handler.vue';
-    import ShowCode from '../ShowCode.vue'
-    import Transition from "../Transition.vue";
-    import VueCodeMirror from '../VueCodeMirror.vue'
-    import VueTerm from '../VueTerm.vue'
+    import VueHandler from './Handler.vue';
+    import ShowCode from '../misc/ShowCode.vue'
+    import Transition from "./Transition.vue";
+    import VueCodeMirror from '../misc/VueCodeMirror.vue'
+    import VueTerm from '../misc/VueTerm.vue'
 
     const Sortable = require('sortablejs')
     const stringify = require("json-stringify-pretty-compact")
@@ -252,7 +235,7 @@
         sim = new SmSim()
 
         // noinspection JSUnusedGlobalSymbols
-        $store!: Store<SmState>
+        $store!: Store<AppState>
 
         // noinspection JSUnusedGlobalSymbols
         // noinspection JSAnnotator
@@ -264,47 +247,47 @@
         }
 
         get handlers(): Array<IndexedHandler> {
-            return this.$store.state.handlers
+            return this.$store.state.sm.handlers
         }
 
         get initialState(): string {
-            return this.$store.state.initialState
+            return this.$store.state.sm.initialState
         }
 
         get initialData(): string {
-            return this.$store.state.initialData
+            return this.$store.state.sm.initialData
         }
 
         get initialCode(): string {
-            return this.$store.state.initialCode
+            return this.$store.state.sm.initialCode
         }
 
         get currentState(): string {
-            return this.$store.state.currentState
+            return this.$store.state.sm.currentState
         }
 
         get currentData(): string {
-            return this.$store.state.currentData
+            return this.$store.state.sm.currentData
         }
 
         get name(): string {
-            return this.$store.state.name
+            return this.$store.state.sm.name
         }
 
         get dirty(): boolean {
-            return this.$store.state.dirty
+            return this.$store.state.sm.dirty
         }
 
         get transitions(): StateTransition[] {
-            return this.$store.state.transitions
+            return this.$store.state.sm.transitions
         }
 
         get revision(): number {
-            return this.$store.state.revision
+            return this.$store.state.sm.revision
         }
 
         get formatVersion(): number {
-            return this.$store.state.formatVersion
+            return this.$store.state.sm.formatVersion
         }
 
         getSource(): string {
@@ -312,27 +295,27 @@
         }
 
         set initialData(value: string) {
-            this.$store.commit('setInitialData', value)
+            this.$store.commit('sm/setInitialData', value)
         }
 
         set initialState(value: string) {
-            this.$store.commit('setInitialState', value)
+            this.$store.commit('sm/setInitialState', value)
         }
 
         set initialCode(value: string) {
-            this.$store.commit('setInitialCode', value)
+            this.$store.commit('sm/setInitialCode', value)
         }
 
         set currentData(value: string) {
-            this.$store.commit('setCurrentData', value)
+            this.$store.commit('sm/setCurrentData', value)
         }
 
         set currentState(value: string) {
-            this.$store.commit('setCurrentState', value)
+            this.$store.commit('sm/setCurrentState', value)
         }
 
         set name(value: string) {
-            this.$store.commit('setName', value)
+            this.$store.commit('sm/setName', value)
         }
 
         get buttons(): SimButton[] {
@@ -390,7 +373,7 @@
             event: Event, handlerIndex: number) {
             this.currentData = stringify(data, {maxLength: 40})
             this.currentState = stateRoute(state)
-            this.$store.dispatch('addTransition',
+            this.$store.dispatch('sm/addTransition',
                 {state, prev, data, event, handlerIndex})
             this.showCurrentTabs()
         }
@@ -401,7 +384,7 @@
         }
 
         clearDirty() {
-            this.$store.commit('clearDirty')
+            this.$store.commit('sm/clearDirty')
         }
 
         onLoadDialog() {
@@ -470,33 +453,33 @@
         }
 
         async load(name: string) {
-            await this.$store.dispatch('load', name)
+            await this.$store.dispatch('sm/load', name)
             this.showLoad = false
             this.initSim()
         }
 
         save() {
-            this.$store.dispatch('save')
+            this.$store.dispatch('sm/save')
         }
 
         deleteFile() {
-            this.$store.dispatch('deleteFile')
+            this.$store.dispatch('sm/deleteFile')
         }
 
         createNew() {
-            this.$store.dispatch('initialize')
+            this.$store.dispatch('sm/initialize')
         }
 
         removeHandler(index: number) {
-            this.$store.commit('removeHandler', index)
+            this.$store.commit('sm/removeHandler', index)
         }
 
         addHandler() {
-            this.$store.dispatch('createHandler')
+            this.$store.dispatch('sm/createHandler')
         }
 
         clear() {
-            this.$store.dispatch('clearTransitions')
+            this.$store.dispatch('sm/clearTransitions')
             this.bus.$emit('repl:clear')
             this.bus.$emit('transitions:clear')
         }

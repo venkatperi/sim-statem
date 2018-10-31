@@ -18,18 +18,20 @@
 //  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
-import Vue from 'vue'
-import Vuex from 'vuex'
-import { AppState } from "./AppState"
-import sm from './sm'
 
-Vue.use(Vuex)
+export const DefaultHandler: Handler = {
+    event: 'cast',
+    context: '*_',
+    state: '*_',
+    handler: '() => keepState()'
+}
 
+export interface Handler {
+    event: string
 
-const store = new Vuex.Store<AppState>({
-    modules: {
-        sm
-    }
-})
+    context: string
 
-export default store
+    state: string,
+
+    handler: string,
+}

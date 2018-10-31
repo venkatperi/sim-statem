@@ -54,12 +54,12 @@
 <script lang="ts">
     import { Component, Lifecycle, Mixin, p, Prop, Watch } from "av-ts";
     import Vue from 'vue'
-    import Bussed from "../traits/Bussed";
-    import Named from "../traits/Named";
-    import { Handler } from "../types";
-    import { format, handlerRoute } from '../util'
-    import VueErrorMarker from './ErrorMarker.vue'
-    import CodeMirror from './VueCodeMirror.vue'
+    import { Handler } from "../../store/sm/Handler";
+    import Bussed from "../../traits/Bussed";
+    import Named from "../../traits/Named";
+    import { format, handlerRoute } from '../../util'
+    import VueErrorMarker from '../misc/ErrorMarker.vue'
+    import CodeMirror from '../misc/VueCodeMirror.vue'
 
     const events: string[] = [
         "cast",
@@ -216,7 +216,7 @@
 </script>
 
 <style type="scss" scoped>
-  @import '../styles/theme';
+  @import '../../styles/theme';
 
   input {
     border: solid 1px $dark;
@@ -350,7 +350,7 @@
 </style>
 
 <style lang="scss">
-  @import '../styles/theme';
+  @import '../../styles/theme';
 
   #handlers .CodeMirror {
     @extend %codemirror-common;
