@@ -19,37 +19,8 @@
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import * as firebase from "firebase"
-import 'firebase/firestore'
-import config from './firebaseConfig'
-
-firebase.initializeApp(config)
-
-// firebase utils
-const db = firebase.firestore()
-const auth = firebase.auth()
-const currentUser = auth.currentUser
-
-// date issue fix according to firebase
-const settings = {
-    timestampsInSnapshots: true
-}
-
-db.settings(settings)
-
-// firebase collections
-const usersCollection = db.collection('users')
-const smCollection = db.collection('stateMachines')
-const commentsCollection = db.collection('comments')
-const likesCollection = db.collection('likes')
-
-export {
-    db,
-    auth,
-    currentUser,
-    usersCollection,
-    smCollection,
-    commentsCollection,
-    likesCollection
+declare module "bootstrap-vue/src/components/link/link" {
+    import Vue from "vue";
+    export default Vue;
 }
 

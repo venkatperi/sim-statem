@@ -22,7 +22,7 @@ function base() {
     'misc',
     'dev',
     'prod',
-    'hardSource',
+    // 'hardSource',
     // 'analyze',
   ].forEach( x => require( `./webpack/${x}` )( config ) );
 

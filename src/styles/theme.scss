@@ -28,7 +28,8 @@ $complementary2: #CD6D5E;
 }
 
 a {
-  color: $complementary1;
+  //color: darken(#C39B46, 10%);
+  color: $darkest;
 }
 
 a:hover {
@@ -46,6 +47,11 @@ body {
   font-family: $display_font;
 }
 
+.modal-dialog {
+  color: $darkest;
+  text-transform: uppercase;
+}
+
 .modal-title {
   font-size: 16px;
   font-weight: 400;
@@ -57,14 +63,35 @@ body {
 }
 
 .modal-header {
-  border-bottom: solid 1px $darker;
+  //border-bottom: solid 1px $darker;
+  border: none;
 }
 
+
 .modal-footer {
-  border-top: solid 1px $less_neutral;
+  //border-top: solid 1px $darker;
+  border: none;
 }
 
 .modal-body {
-  border-top: solid 1px $less_neutral;
-  border-bottom: solid 1px $darker;
+  //border-top: solid 1px $less_neutral;
+  //border-bottom: solid 1px $darker;
+  border: none;
+}
+
+input.form-control {
+  background: $dark;
+  border: none;
+  &:focus {
+    border: $highlight_color;
+    color: $lighter;
+  }
+}
+
+.extras{
+  font-size: 0.75rem;
+  a {
+    margin-right: 20px;
+    //color: $complementary2;
+  }
 }

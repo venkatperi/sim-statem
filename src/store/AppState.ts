@@ -20,7 +20,10 @@
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import { SmState } from "./sm/SmState"
+import { UserState } from "./user/UserState"
 
 export interface AppState {
-    sm: SmState
+    sm: SmState,
+
+    user: UserState
 }

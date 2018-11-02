@@ -18,20 +18,17 @@
 //  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
-import Vue from 'vue'
-import Vuex from 'vuex'
-import { AppState } from "./AppState"
-import sm from './sm'
-import user from './user'
 
-Vue.use(Vuex)
+export interface UserProfile {
+    name?: string
 
+    title?: string
+}
 
-const store = new Vuex.Store<AppState>({
-    modules: {
-        sm,
-        user
-    }
-})
+export interface UserState {
+    name?: string
 
-export default store
+    email?: string;
+
+    uid?: string;
+}

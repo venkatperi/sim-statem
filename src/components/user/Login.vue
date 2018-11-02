@@ -1,207 +1,281 @@
 <!-- // Copyright 2018, Venkat Peri. --><!-- // --><!-- // Permission is hereby granted, free of charge, to any person obtaining a --><!-- // copy of this software and associated documentation files (the --><!-- // "Software"), to deal in the Software without restriction, including --><!-- // without limitation the rights to use, copy, modify, merge, publish, --><!-- // distribute, sublicense, and/or sell copies of the Software, and to permit --><!-- // persons to whom the Software is furnished to do so, subject to the --><!-- // following conditions: --><!-- // --><!-- // The above copyright notice and this permission notice shall be included --><!-- // in all copies or substantial portions of the Software. --><!-- // --><!-- // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS --><!-- // OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF --><!-- // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN --><!-- // NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, --><!-- // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR --><!-- // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE --><!-- // USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 
 <template>
-  <div id="login">
+  <b-modal :ok-title="title"
+           v-bind="$attrs"
+           :title="title"
+           @ok="process"
+           :ok-disabled="!isValid"
+           @cancel="cancel">
+    <form v-if="mode==='login'" @submit.prevent>
+      <b-form-group :state="validEmail(loginForm.email)"
+                    invalid-feedback="Invalid email address">
+        <b-form-input v-model.trim="loginForm.email"
+                      type="text"
+                      placeholder="email"
+                      id="email1" />
+      </b-form-group>
 
-    <transition name="fade">
-      <div v-if="performingRequest" class="loading">
-        <p>Loading...</p>
+      <b-form-group>
+        <b-form-input v-model.trim="loginForm.password"
+                      type="password"
+                      placeholder="password"
+                      id="password1" />
+      </b-form-group>
+
+      <div class="extras">
+        <b-link @click="mode='reset'">Forgot Password</b-link>
+        <b-link @click="mode='signup'">Create Account</b-link>
       </div>
-    </transition>
 
-    <section>
+    </form>
 
-      <div class="col1">
-        <h1>Vuegram</h1>
-        <p>Welcome to the <a href="https://savvyapps.com/" target="_blank">Savvy
-          Apps</a> sample social media web app powered by Vue.js and Firebase.
-          Build this project by checking out The Definitive Guide to Getting
-          Started with Vue.js</p>
-      </div>
+    <form v-else-if="mode==='signup'" @submit.prevent>
+      <b-form-group :state="signupForm.name.length > 3"
+                    invalid-feedback="Name is too short">
+        <b-form-input v-model.trim="signupForm.name"
+                      type="text"
+                      placeholder="name"
+                      id="name2" />
+      </b-form-group>
 
-      <div class="col2"
-           :class="{ 'signup-form': !showLoginForm && !showForgotPassword }">
-        <form v-if="showLoginForm" @submit.prevent>
-          <h1>Welcome Back</h1>
+      <b-form-group :state="validEmail(signupForm.email)"
+                    invalid-feedback="Invalid email address">
+        <b-form-input v-model.trim="signupForm.email"
+                      type="text"
+                      placeholder="email"
+                      id="email2" />
+      </b-form-group>
 
-          <label for="email1">Email</label>
-          <input v-model.trim="loginForm.email"
-                 type="text"
-                 placeholder="you@email.com"
-                 id="email1" />
+      <b-form-group>
+        <b-form-input v-model.trim="signupForm.password"
+                      type="password"
+                      placeholder="password"
+                      id="password2" />
+      </b-form-group>
 
-          <label for="password1">Password</label>
-          <input v-model.trim="loginForm.password"
-                 type="password"
-                 placeholder="******"
-                 id="password1" />
+        <b-form-group :state="signupForm.password === signupForm.confirmPassword"
+                      invalid-feedback="Passwords don't match">
+        <b-form-input v-model.trim="signupForm.confirmPassword"
+                      type="password"
+                      placeholder="confirm password"
+                      id="passwordConfirm2" />
+      </b-form-group>
 
-          <button @click="login" class="button">Log In</button>
+      <b-form-group class="extras">
+        <a @click="mode='login'">Back to Log In</a>
+      </b-form-group>
 
-          <div class="extras">
-            <a @click="togglePasswordReset">Forgot Password</a>
-            <a @click="toggleForm">Create an Account</a>
-          </div>
-        </form>
-        <form v-if="!showLoginForm && !showForgotPassword" @submit.prevent>
-          <h1>Get Started</h1>
-
-          <label for="name">Name</label>
-          <input v-model.trim="signupForm.name"
-                 type="text"
-                 placeholder="Savvy Apps"
-                 id="name" />
-
-          <label for="title">Title</label>
-          <input v-model.trim="signupForm.title"
-                 type="text"
-                 placeholder="Company"
-                 id="title" />
-
-          <label for="email2">Email</label>
-          <input v-model.trim="signupForm.email"
-                 type="text"
-                 placeholder="you@email.com"
-                 id="email2" />
-
-          <label for="password2">Password</label>
-          <input v-model.trim="signupForm.password"
-                 type="password"
-                 placeholder="min 6 characters"
-                 id="password2" />
-
-          <button @click="signup" class="button">Sign Up</button>
-
-          <div class="extras">
-            <a @click="toggleForm">Back to Log In</a>
-          </div>
-        </form>
-
-        <form v-if="showForgotPassword" @submit.prevent class="password-reset">
-          <div v-if="!passwordResetSuccess">
-            <h1>Reset Password</h1>
-            <p>We will send you an email to reset your password</p>
-
-            <label for="email3">Email</label>
-            <input v-model.trim="passwordForm.email"
-                   type="text"
-                   placeholder="you@email.com"
-                   id="email3" />
-
-            <button @click="resetPassword" class="button">Submit</button>
-
-            <div class="extras">
-              <a @click="togglePasswordReset">Back to Log In</a>
-            </div>
-          </div>
-          <div v-else>
-            <h1>Email Sent</h1>
-            <p>check your email for a link to reset your password</p>
-            <button @click="togglePasswordReset" class="button">Back to login
-            </button>
-          </div>
-        </form>
-
-        <transition name="fade">
-          <div v-if="errorMsg !== ''" class="error-msg">
-            <p>{{ errorMsg }}</p>
-          </div>
-        </transition>
-
-      </div>
-    </section>
-  </div>
+    </form>
+  </b-modal>
 </template>
 
-<script>
-  const fb = require( '../firebaseConfig.js' )
+<script lang="ts">
+    import { Component } from "av-ts";
+    import BFormGroup from 'bootstrap-vue/src/components/form-group/form-group'
+    import BFormInput from 'bootstrap-vue/src/components/form-input/form-input'
+    import BLink from 'bootstrap-vue/src/components/link/link'
+    import BModal from 'bootstrap-vue/src/components/modal/modal'
+    import * as equals from 'validator/lib/equals'
+    import * as isEmail from 'validator/lib/isEmail'
+    import * as isEmpty from 'validator/lib/isEmpty'
+    import Vue from 'vue'
+    import * as fb from "../../firebase";
 
-  export default {
-    data() {
-      return {
-        loginForm: {
-          email: '',
-          password: '',
+    type Mode = 'login' | 'signup' | 'reset'
+
+    type Login = {
+        email: string,
+        password: string
+    }
+
+    type Signup = {
+        name: string,
+        email: string,
+        password: string,
+        confirmPassword: string
+    }
+
+    type Reset = {
+        email: string,
+    }
+
+    const modes: {
+        [k in Mode]: {
+            title: string,
+            validate: (args: Login | Reset | Signup) => boolean
+        }
+    } = {
+        login: {
+            title: 'Login',
+            validate: (args: Login) => {
+                return isEmail(args.email)
+            }
         },
 
-        showLoginForm: true,
-        showForgotPassword: false,
-        passwordResetSuccess: false,
-        performingRequest: false,
-        errorMsg: '',
-      }
-    },
+        signup: {
+            title: 'Signup',
+            validate: (args: Signup) => {
+                return isEmail(args.email)
+                    && !isEmpty(args.name)
+                    && !isEmpty(args.password)
+                    && equals(args.password, args.confirmPassword)
+            }
+        },
 
-    methods: {
-      toggleForm() {
-        this.errorMsg = ''
-        this.showLoginForm = !this.showLoginForm
-      },
-      togglePasswordReset() {
-        if ( this.showForgotPassword ) {
-          this.showLoginForm = true
-          this.showForgotPassword = false
-          this.passwordResetSuccess = false
-        } else {
-          this.showLoginForm = false
-          this.showForgotPassword = true
+        reset: {
+            title: 'Reset Password',
+            validate: (args: Reset) => {
+                return isEmail(args.email)
+            }
         }
-      },
 
-      login() {
-        this.performingRequest = true
+    }
 
-        fb.auth.signInWithEmailAndPassword( this.loginForm.email, this.loginForm.password ).then( user => {
-          this.$store.commit( 'setCurrentUser', user )
-          this.$store.dispatch( 'fetchUserProfile' )
-          this.performingRequest = false
-          this.$router.push( '/dashboard' )
-        } ).catch( err => {
-          console.log( err )
-          this.performingRequest = false
-          this.errorMsg = err.message
-        } )
-      },
+    const defaults = {
+        loginForm: {
+            email: '',
+            password: ''
+        },
 
-      signup() {
-        this.performingRequest = true
+        signupForm: {
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+        }
+    }
 
-        fb.auth.createUserWithEmailAndPassword( this.signupForm.email, this.signupForm.password ).then( user => {
-          this.$store.commit( 'setCurrentUser', user )
+    @Component({
+        inheritAttrs: false,
+        components: {
+            'b-modal': BModal,
+            'b-form-input': BFormInput,
+            'b-form-group': BFormGroup,
+            'b-link': BLink,
+        },
+    })
+    export default class VueLogin extends Vue {
+        loginForm: Login = {
+            email: '',
+            password: ''
+        }
 
-          // create user obj
-          fb.usersCollection.doc( user.uid ).set( {
-            name: this.signupForm.name,
-            title: this.signupForm.title,
-          } ).then( () => {
-            this.$store.dispatch( 'fetchUserProfile' )
-            this.performingRequest = false
-            this.$router.push( '/dashboard' )
-          } ).catch( err => {
-            console.log( err )
-            this.performingRequest = false
-            this.errorMsg = err.message
-          } )
-        } ).catch( err => {
-          console.log( err )
-          this.performingRequest = false
-          this.errorMsg = err.message
-        } )
-      },
+        signupForm: Signup = {
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+        }
 
-      resetPassword() {
-        this.performingRequest = true
+        resetForm: Reset = {
+            email: ''
+        }
 
-        fb.auth.sendPasswordResetEmail( this.passwordForm.email ).then( () => {
-          this.performingRequest = false
-          this.passwordResetSuccess = true
-          this.passwordForm.email = ''
-        } ).catch( err => {
-          console.log( err )
-          this.performingRequest = false
-          this.errorMsg = err.message
-        } )
-      },
-    },
-  }
+        mode: Mode = 'login'
+
+        errorMsg = ''
+
+        get title(): string {
+            return modes[this.mode].title
+        }
+
+        cancel() {
+            this.reset()
+        }
+
+        reset() {
+            Object.assign(this.loginForm, defaults.loginForm)
+            Object.assign(this.signupForm, defaults.signupForm)
+        }
+
+        validEmail(str: string): boolean {
+            return isEmpty(str) ||
+                isEmail(str)
+        }
+
+        get isValid(): boolean {
+            const validate = modes[this.mode].validate
+            switch (this.mode) {
+                case 'login':
+                    return validate(this.loginForm)
+                case 'signup':
+                    return validate(this.signupForm)
+                case 'reset':
+                    return validate(this.resetForm)
+            }
+        }
+
+        async process() {
+            try {
+                switch (this.mode) {
+                    case 'login':
+                        await this.login()
+                        break
+                    case 'signup':
+                        await this.signup()
+                        break
+                }
+            }
+            catch (err) {
+                console.log(err)
+                this.errorMsg = err.message
+            }
+            this.reset()
+        }
+
+        async login() {
+            let auth =
+                await fb.auth.signInWithEmailAndPassword(
+                    this.loginForm.email,
+                    this.loginForm.password)
+            this.$store.commit('user/setCurrentUser', auth.user)
+            await this.$store.dispatch('user/fetchUserProfile')
+            // this.$router.push('/dashboard')
+        }
+
+        async signup() {
+            let data = Object.assign({}, this.signupForm)
+            let cred = await fb.auth.createUserWithEmailAndPassword(
+                this.signupForm.email,
+                this.signupForm.password)
+
+            let user = cred.user
+            if (!user) {
+                throw new Error('no user?')
+            }
+            this.$store.commit('user/setCurrentUser', user)
+
+            await fb.usersCollection
+                    .doc(user.uid).set({
+                    name: data.name,
+                })
+            await this.$store.dispatch('user/fetchUserProfile')
+            // this.$router.push('/dashboard')
+        }
+
+        // resetPassword() {
+        //     this.performingRequest = true
+        //
+        //     fb.auth.sendPasswordResetEmail(this.passwordForm.email)
+        //       .then(() => {
+        //           this.performingRequest = false
+        //           this.passwordResetSuccess = true
+        //           this.passwordForm.email = ''
+        //       }).catch(err => {
+        //         console.log(err)
+        //         this.performingRequest = false
+        //         this.errorMsg = err.message
+        //     })
+        // }
+    }
 </script>
+
+<style lang="scss" scoped>
+  @import "../../styles/theme";
+
+  label {
+    text-transform: uppercase;
+    font-size: 0.9rem;
+  }
+</style>

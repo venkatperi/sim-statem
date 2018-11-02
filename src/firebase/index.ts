@@ -18,20 +18,38 @@
 //  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
-import Vue from 'vue'
-import Vuex from 'vuex'
-import { AppState } from "./AppState"
-import sm from './sm'
-import user from './user'
 
-Vue.use(Vuex)
+import * as firebase from "firebase"
+import 'firebase/firestore'
+import config from './firebaseConfig'
 
+firebase.initializeApp(config)
 
-const store = new Vuex.Store<AppState>({
-    modules: {
-        sm,
-        user
-    }
-})
+// firebase utils
+const db = firebase.firestore()
+const auth = firebase.auth()
+const currentUser = auth.currentUser
 
-export default store
+// date issue fix according to firebase
+const settings = {
+    timestampsInSnapshots: true
+}
+
+db.settings(settings)
+
+// firebase collections
+const usersCollection = db.collection('users')
+const smCollection = db.collection('stateMachines')
+const commentsCollection = db.collection('comments')
+const likesCollection = db.collection('likes')
+
+export  {
+    db,
+    auth,
+    currentUser,
+    usersCollection,
+    smCollection,
+    commentsCollection,
+    likesCollection
+}
+

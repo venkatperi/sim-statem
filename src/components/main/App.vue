@@ -11,6 +11,8 @@
       <MultiSelect @select="load" :options="fileNames" />
     </b-modal>
 
+    <Login id="login" />
+
     <ShowCode name="showCode"
               :value="theCode"
               title="State Machine Code"
@@ -28,10 +30,10 @@
         <div class="col">
           <div class="app-controls">
             <div class="icons">
-
               <div class="icon" @click="createNew" title="Create">
                 <v-icon name="regular/file" />
               </div>
+
               <div class="icon" @click="onLoadDialog" title="Load">
                 <v-icon name="file" />
               </div>
@@ -53,13 +55,25 @@
 
               <LabelEdit class="name" v-model="name" placeholder="Name..." />
             </div>
+
+            <div class="icons float-right">
+              <div v-if="!isAuthenticated"
+                   class="icon"
+                   v-b-modal.login
+                   title="Login">
+                <v-icon name="sign-in-alt" />
+              </div>
+              <div v-else>
+                <span>{{ userName }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="row">
 
-        <div class="col left">
+        <div class="col">
           <section>
             <b-tabs v-model="stateTab">
               <b-tab title="Initial State" active>
@@ -114,7 +128,7 @@
           </section>
 
         </div>
-        <div class="col right">
+        <div class="col">
 
           <section>
             <div class="header" @dblclick="toggleAllCollapsed">
@@ -194,11 +208,12 @@
     import { IndexedHandler } from "../../store/sm/IndexedHandler";
     import { StateTransition } from "../../store/sm/StateTransition";
     import { format, quote } from '../../util'
-    import VueHandler from './Handler.vue';
     import ShowCode from '../misc/ShowCode.vue'
-    import Transition from "./Transition.vue";
     import VueCodeMirror from '../misc/VueCodeMirror.vue'
     import VueTerm from '../misc/VueTerm.vue'
+    import Login from '../user/Login.vue'
+    import VueHandler from './Handler.vue';
+    import Transition from "./Transition.vue";
 
     const Sortable = require('sortablejs')
     const stringify = require("json-stringify-pretty-compact")
@@ -212,6 +227,7 @@
             'b-btn': BButton,
             'b-tabs': BTabs,
             'b-tab': BTab,
+            Login,
         },
         directives: {
             'b-modal': BModalDirective,
@@ -244,6 +260,16 @@
             load: BModal,
             initialState: VueCodeMirror,
             currentState: VueCodeMirror,
+        }
+
+        get isAuthenticated(): boolean {
+            return !!this.$store.state.user.uid
+        }
+
+        get userName(): string {
+            let user = this.$store.state.user
+            console.log(user)
+            return user.name || ''
         }
 
         get handlers(): Array<IndexedHandler> {
@@ -357,6 +383,10 @@
             this.createNew()
             this.clearDirty()
             this.initSim()
+        }
+
+        login() {
+
         }
 
         swapHandlers(e: SortableEvent) {
@@ -560,10 +590,6 @@
     border: none;
   }
 
-  .left, .right {
-    /*max-width: 50%;*/
-  }
-
   .events, .initialData, .output, .currentData {
     /*width: 100%;*/
     resize: none;
@@ -644,24 +670,6 @@
 
   .app {
     font-family: $display_font;
-    .modal-title {
-      font-size: 16px;
-      font-weight: 400;
-      text-transform: uppercase;
-    }
-    .modal-content {
-      background: $bg_color;
-    }
-    .modal-header {
-      border-bottom: solid 1px $darker;
-    }
-    .modal-footer {
-      border-top: solid 1px $less_neutral;
-    }
-    .modal-body {
-      border-top: solid 1px $less_neutral;
-      border-bottom: solid 1px $darker;
-    }
   }
 
   .nav-tabs {
