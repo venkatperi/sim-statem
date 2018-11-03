@@ -1,29 +1,64 @@
 <template>
-  <div class="container-fluid menu p-0 m-0 mb-1">
-    <div class="row">
-      <div class="brand col-auto float-left align-middle pl-5">
-        gen-statem State Machine Simulator
+  <div class="row menu p-0 m-0 mb-1">
+    <div class="col-auto float-left align-middle pl-2">
+      <Login id="login" />
+      <div class="brand">
+        GEN-StateM SIM
       </div>
-
-      <div class="col icon2 float-right text-right">
-        <a class="icon" href="https://github.com/venkatperi/vue-flickr-app" target="_blank">
-          <font-awesome-icon :icon="['fab', 'github']" size="1x" />
-        </a>
-      </div>
-
     </div>
+
+    <div class="col ">
+      <div class="controls">
+        <div class="control" title="Show Code">
+          <v-icon name="code" />
+          <label>Code</label>
+        </div>
+        <div class="control" title="Save">
+          <v-icon name="regular/save" />
+          <label>Save</label>
+        </div>
+      </div>
+
+      <div class="float-right controls">
+        <div v-if="!isAuthenticated"
+             class="control"
+             v-b-modal.login
+             title="Login">
+          <v-icon name="sign-in-alt" />
+          <label>Sign in</label>
+        </div>
+        <div v-else>
+          <span>{{ userName }}</span>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
-<script>
-  import GithubLogo from '../images/github.svg';
+<script lang="ts">
+    import { Component } from "av-ts";
+    import Vue from 'vue'
+    import Login from './user/Login.vue'
 
-  export default {
-    name: 'app-menu',
-    components: {
-      GithubLogo,
-    },
-  }
+    @Component({
+        name: 'app-menu',
+        components: {
+            Login,
+        },
+    })
+    export default class AppMenu extends Vue {
+        get isAuthenticated(): boolean {
+            return !!this.$store.state.user.uid
+        }
+
+        get userName(): string {
+            let user = this.$store.state.user
+            console.log(user)
+            return user.name || ''
+        }
+
+    }
 
 </script>
 
@@ -32,56 +67,43 @@
 
   @import '../styles/theme';
 
-  .icon2 {
-    margin-top: 5px;
-  }
-
-  .menu, .icon {
-    color: lighten(#416CB6, 10%);
-  }
+  $height: 60px;
 
   .menu {
-    background: $darkest;
+    font-family: $display_font, sans-serif;
+    height: $height;
+    box-shadow: 0 0 5px rgba(28, 33, 40, 0);
+    background: #1c2128;
   }
 
   .brand {
+    display: inline-block;
+    color: darken(#619ee6, 20%);
     margin-bottom: 0;
-    font-family: $display_font, sans-serif;
-    font-weight: 200;
-    font-size: 1.3em;
-    line-height: 50px;
+    font-weight: 400;
+    font-size: 1.1em;
+    line-height: $height;
     text-transform: uppercase;
   }
 
-  .nav-masthead {
-    .nav-link {
-      padding: .25rem 0;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.5);
-      background-color: transparent;
-      border-bottom: .25rem solid transparent;
-      &:hover, &:focus {
-      }
-      + .nav-link {
-        margin-left: 1rem;
-      }
-    }
-    .active {
-      color: #fff;
-      border-bottom-color: #fff;
+  .controls {
+    font-size: 0.9em;
+    display: inline-block;
+    svg {
+      position: relative;
+      top: -1px;
+      color: $lighter;
     }
   }
 
-  .masthead-brand, .nav-masthead {
-    text-align: center;
-  }
-
-  @media (min-width: 30rem) {
-    .masthead-brand {
-      float: left;
-    }
-    .nav-masthead {
-      float: right;
+  .control {
+    display: inline-block;
+    vertical-align: middle;
+    height: $height;
+    line-height: $height;
+    margin-right: 10px;
+    &:hover {
+      border-bottom: solid 1px #0084ff;
     }
   }
 

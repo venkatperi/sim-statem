@@ -26,7 +26,7 @@
       <div class="prev">From</div>
       <div class="current">To</div>
       <div class="route">Event & Route</div>
-      <div class="handlerIndex">RULE</div>
+      <div class="handlerIndex">Rule</div>
     </div>
     <div :class="['row', index%2?'odd':'even']"
          v-for="(t, index) in sortedTransitions"
@@ -73,6 +73,8 @@
 
   @import '../../styles/theme';
 
+  $line-height: 25px;
+
   .transitions {
     width: 100%;
     display: table;
@@ -90,17 +92,20 @@
     font-family: $code_font;
     background: $code_bg;
     color: $neutral;
-    line-height: 30px;
+    line-height: $line-height;
+    height: $line-height;
     padding: 0 10px;
     display: table-row;
     justify-content: center;
     &.header {
       font-family: $display_font;
-      background: lighten($code_bg, 5%);
-      text-transform: uppercase;
+      font-size: 0.85em;
+      background: $heading_bg;
+      color: $lighter;
+      border-bottom: none;
     }
     &.even {
-      background: darken($code_bg, 10%);
+      background: lighten($heading_bg, 10%);
     }
   }
 
@@ -108,7 +113,6 @@
     display: table-cell;
     padding: 0 5px;
     text-align: center;
-    border-bottom: solid 1px $dark;
   }
 
   .index, .prev, .route, .current {

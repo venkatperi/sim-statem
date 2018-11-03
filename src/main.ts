@@ -36,7 +36,7 @@ import store from "./store/index";
 const icons = [
     "caret-down", "caret-right", "chevron-circle-down", "chevron-circle-right",
     "eye", "eye-slash", "hashtag", "circle", "code", "file", "regular/file",
-    "save", "times-circle", "trash-alt", "link", "plus", "save", "times-circle",
+    "save", "times-circle", "trash-alt", "link", "plus", "regular/save", "times-circle",
     "vial", "sign-in-alt"];
 
 Vue.use(Icons, icons);

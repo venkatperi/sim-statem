@@ -3,6 +3,11 @@
 @import 'theme';
 @import './tooltip.scss';
 
+*, body, button, html, input, select, textarea {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale
+}
+
 html,
 body {
   font-family: 'Share Tech Mono', serif;
@@ -17,11 +22,12 @@ body {
   color: $text-color;
   font-size: 100%;
   width: 100%;
-  background-color: darken($border_bg, 2%) !important;
+  //background-color: darken($border_bg, 2%) !important;
+  background: #20262e;
 }
 
 
-#content {
+#content, #app {
   height: 100%;
 }
 
@@ -36,5 +42,9 @@ a.icon {
   color: $icon-color;
   line-height: 27px;
   padding: 0 5px;
+}
+
+a:active, a:focus, button::-moz-focus-inner, button:focus, input[type=button]::-moz-focus-inner, input[type=file] > input[type=button]::-moz-focus-inner, input[type=reset]::-moz-focus-inner, input[type=submit]::-moz-focus-inner, select::-moz-focus-inner {
+  outline: none !important
 }
 

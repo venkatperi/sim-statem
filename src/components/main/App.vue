@@ -11,7 +11,7 @@
       <MultiSelect @select="load" :options="fileNames" />
     </b-modal>
 
-    <Login id="login" />
+    <!--<Login id="login" />-->
 
     <ShowCode name="showCode"
               :value="theCode"
@@ -25,166 +25,193 @@
       Are you sure you want to delete {{ name }}?
     </b-modal>
 
-    <div class="main">
-      <div class="row">
-        <div class="col">
-          <div class="app-controls">
-            <div class="icons">
-              <div class="icon" @click="createNew" title="Create">
-                <v-icon name="regular/file" />
-              </div>
 
-              <div class="icon" @click="onLoadDialog" title="Load">
-                <v-icon name="file" />
-              </div>
+    <!--<div class="row">-->
+    <!--<div class="col">-->
+    <!--<div class="app-controls">-->
+    <!--<div class="icons">-->
+    <!--<div class="icon" @click="createNew" title="Create">-->
+    <!--<v-icon name="regular/file" />-->
+    <!--</div>-->
 
-              <div class="separator"></div>
+    <!--<div class="icon" @click="onLoadDialog" title="Load">-->
+    <!--<v-icon name="file" />-->
+    <!--</div>-->
 
-              <div class="icon" v-b-modal.delete title="Delete">
-                <v-icon name="trash-alt" />
-              </div>
+    <!--<div class="separator"></div>-->
 
-              <div class="icon" @click="onShowCode" title="Show Code">
-                <v-icon name="code" />
-              </div>
-              <div :class="['icon', dirty?'dirty':'']"
-                   @click="save()"
-                   title="Save">
-                <v-icon name="save" />
-              </div>
+    <!--<div class="icon" v-b-modal.delete title="Delete">-->
+    <!--<v-icon name="trash-alt" />-->
+    <!--</div>-->
 
-              <LabelEdit class="name" v-model="name" placeholder="Name..." />
-            </div>
+    <!--<div class="icon" @click="onShowCode" title="Show Code">-->
+    <!--<v-icon name="code" />-->
+    <!--</div>-->
+    <!--<div :class="['icon', dirty?'dirty':'']"-->
+    <!--@click="save()"-->
+    <!--title="Save">-->
+    <!--<v-icon name="save" />-->
+    <!--</div>-->
 
-            <div class="icons float-right">
-              <div v-if="!isAuthenticated"
-                   class="icon"
-                   v-b-modal.login
-                   title="Login">
-                <v-icon name="sign-in-alt" />
-              </div>
-              <div v-else>
-                <span>{{ userName }}</span>
-              </div>
-            </div>
+    <!--<LabelEdit class="name" v-model="name" placeholder="Name..." />-->
+    <!--</div>-->
+
+    <!--<div class="icons float-right">-->
+    <!--<div v-if="!isAuthenticated"-->
+    <!--class="icon"-->
+    <!--v-b-modal.login-->
+    <!--title="Login">-->
+    <!--<v-icon name="sign-in-alt" />-->
+    <!--</div>-->
+    <!--<div v-else>-->
+    <!--<span>{{ userName }}</span>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
+
+    <splitter-pane split="horizontal"
+                :initial-percent="85"
+                :throttle="throttle"
+                :min-percent="70"
+                :max-percent="90">
+      <template slot="one">
+        <splitter-pane split="vertical">
+          <template slot="one">
+            <splitter-pane split="horizontal"
+                        :min-percent='30'
+                        :throttle="throttle"
+                        :initial-percent='30'>
+
+              <template slot="one">
+                <splitter-pane split="horizontal"
+                            :min-percent='30'
+                            :max-percent='70'
+                            :throttle="throttle"
+                            @resize="resize1">
+                  <template slot="one">
+                    <div style="position: relative;">
+                      <b-tabs v-model="stateTab">
+                        <b-tab title="Initial State" active>
+                          <VueCodeMirror v-model="initialState"
+                                         ref="initialState"
+                                         name="initialState"
+                                         mode="javascript"
+                                         theme="midnight"
+                                         :x-bus="bus"
+                                         @blur="sanitize"
+                                         :lineNumbers="true" />
+                        </b-tab>
+                        <b-tab title="Current State">
+                          <VueCodeMirror v-model="currentState"
+                                         ref="currentState"
+                                         name="currentState"
+                                         mode="javascript"
+                                         theme="midnight"
+                                         :x-bus="bus"
+                                         :read-only="true"
+                                         :lineNumbers="true" />
+                        </b-tab>
+                      </b-tabs>
+                    </div>
+                  </template>
+
+                  <template slot="two">
+                    <b-tabs v-model="dataTab">
+                      <b-tab title="Initial Data" active>
+                        <VueCodeMirror v-model="initialData"
+                                       ref="initialData"
+                                       name="initialData"
+                                       mode="javascript"
+                                       theme="midnight"
+                                       :x-bus="bus"
+                                       :lineNumbers="true" />
+                      </b-tab>
+                      <b-tab title="Current Data">
+                        <VueCodeMirror v-model="currentData"
+                                       ref="currentData"
+                                       name="currentData"
+                                       mode="javascript"
+                                       theme="midnight"
+                                       :x-bus="bus"
+                                       :read-only="true"
+                                       :lineNumbers="true" />
+                      </b-tab>
+                    </b-tabs>
+                  </template>
+                </splitter-pane>
+              </template>
+
+              <template slot="two">
+                <div class="header">State Transitions</div>
+                <Transition class="transition" :transitions="transitions" />
+              </template>
+            </splitter-pane>
+          </template>
+
+          <template slot="two">
+            <splitter-pane split="horizontal"
+                        :throttle="throttle"
+                        :initial-percent='75'>
+              <template slot="one">
+                <div class="header" @dblclick="toggleAllCollapsed">
+                  <label>State Machine Rules</label>
+                  <span class="icons">
+                    <span class="icon" @click="addHandler">
+                      <v-icon name="plus" />
+                    </span>
+                  </span>
+                </div>
+
+                <div class="handlers list-group" id="handlers" ref="handlers">
+                  <VueHandler v-for="h in sortedHandlers"
+                              :key="h.id"
+                              :index="h.index"
+                              :odd="h.index%2 === 1"
+                              v-on:remove="removeHandler(h.index)"
+                              :x-bus="bus"
+                              :name="`handler-${h.index}`"
+                              v-model="h.handler" />
+                </div>
+              </template>
+
+              <template slot="two">
+                <div class="header"><label>Initial Code</label></div>
+                <VueCodeMirror v-model="initialCode"
+                               ref="initialCode"
+                               name="initialCode"
+                               mode="javascript"
+                               theme="midnight"
+                               @blur="formatCode"
+                               :x-bus="bus"
+                               :lineNumbers="true" />
+              </template>
+            </splitter-pane>
+          </template>
+        </splitter-pane>
+
+      </template>
+      <template slot="two">
+
+        <div class="repl-outer">
+          <div class="header">REPL
+            <b-btn v-for="(b, index) in buttons"
+                   :key="index"
+                   size="sm"
+                   variant="primary"
+                   @click="exec(b.command)"> {{b.name}}
+            </b-btn>
+          </div>
+          <div class="repl-inner">
+            <VueTerm class="repl"
+                     :input-handler="onCommand"
+                     :x-bus="bus"
+                     prompt="> " />
           </div>
         </div>
-      </div>
-
-      <div class="row">
-
-        <div class="col">
-          <section>
-            <b-tabs v-model="stateTab">
-              <b-tab title="Initial State" active>
-                <VueCodeMirror v-model="initialState"
-                               ref="initialState"
-                               name="initialState"
-                               mode="javascript"
-                               theme="midnight"
-                               :x-bus="bus"
-                               @blur="sanitize"
-                               :lineNumbers="true" />
-              </b-tab>
-              <b-tab title="Current State">
-                <VueCodeMirror v-model="currentState"
-                               ref="currentState"
-                               name="currentState"
-                               mode="javascript"
-                               theme="midnight"
-                               :x-bus="bus"
-                               :read-only="true"
-                               :lineNumbers="true" />
-              </b-tab>
-            </b-tabs>
-          </section>
-
-          <section>
-            <b-tabs v-model="dataTab">
-              <b-tab title="Initial Data" active>
-                <VueCodeMirror v-model="initialData"
-                               ref="initialData"
-                               name="initialData"
-                               mode="javascript"
-                               theme="midnight"
-                               :x-bus="bus"
-                               :lineNumbers="true" />
-              </b-tab>
-              <b-tab title="Current Data">
-                <VueCodeMirror v-model="currentData"
-                               ref="currentData"
-                               name="currentData"
-                               mode="javascript"
-                               theme="midnight"
-                               :x-bus="bus"
-                               :lineNumbers="true" />
-              </b-tab>
-            </b-tabs>
-          </section>
-
-          <section>
-            <div class="header">State Transitions</div>
-            <Transition class="transition" :transitions="transitions" />
-          </section>
-
-        </div>
-        <div class="col">
-
-          <section>
-            <div class="header" @dblclick="toggleAllCollapsed">
-              <label>State Machine Rules</label>
-              <span class="icons">
-                <span class="icon" @click="addHandler">
-                  <v-icon name="plus" />
-                </span>
-              </span>
-            </div>
-
-            <div class="handlers list-group" id="handlers" ref="handlers">
-              <VueHandler v-for="h in sortedHandlers"
-                          :key="h.id"
-                          :index="h.index"
-                          :odd="h.index%2 === 1"
-                          v-on:remove="removeHandler(h.index)"
-                          :x-bus="bus"
-                          :name="`handler-${h.index}`"
-                          v-model="h.handler" />
-            </div>
-          </section>
-
-          <section class="initial-code">
-            <div class="header"><label>Initial Code</label></div>
-            <VueCodeMirror v-model="initialCode"
-                           ref="initialCode"
-                           name="initialCode"
-                           mode="javascript"
-                           theme="midnight"
-                           @blur="formatCode"
-                           :x-bus="bus"
-                           :lineNumbers="true" />
-          </section>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="repl-outer">
-      <div class="header">REPL
-        <b-btn v-for="(b, index) in buttons"
-               :key="index"
-               size="sm"
-               variant="primary"
-               @click="exec(b.command)"> {{b.name}}
-        </b-btn>
-      </div>
-      <div class="repl-inner">
-        <VueTerm class="repl"
-                 :input-handler="onCommand"
-                 :x-bus="bus"
-                 prompt="> " />
-      </div>
-    </div>
-
+      </template>
+    </splitter-pane>
   </div>
 </template>
 
@@ -201,13 +228,14 @@
     import * as LocalStore from 'store'
     import Vue from 'vue';
     import MultiSelect from 'vue-multiselect'
+    import SplitterPane from 'vue-splitter-pane'
     import { Store } from "vuex";
     import LabelEdit from '../../../../label-edit/src/LabelEdit.vue'
     import { SimButton, SmSim } from "../../SmSim";
     import { AppState } from "../../store/AppState";
     import { IndexedHandler } from "../../store/sm/IndexedHandler";
     import { StateTransition } from "../../store/sm/StateTransition";
-    import { format, quote } from '../../util'
+    import { format } from '../../util'
     import ShowCode from '../misc/ShowCode.vue'
     import VueCodeMirror from '../misc/VueCodeMirror.vue'
     import VueTerm from '../misc/VueTerm.vue'
@@ -228,6 +256,7 @@
             'b-tabs': BTabs,
             'b-tab': BTab,
             Login,
+            SplitterPane
         },
         directives: {
             'b-modal': BModalDirective,
@@ -237,6 +266,8 @@
         bus = new Vue()
 
         theCode = ''
+
+        throttle = -1
 
         fileNames: string[] = []
 
@@ -260,6 +291,17 @@
             load: BModal,
             initialState: VueCodeMirror,
             currentState: VueCodeMirror,
+        }
+
+        resize1(sizes: [number, number]) {
+            // console.log(`resize1: ${sizes}`)
+            let a = 'initialState'
+            let b = 'initialData'
+            let da = 25
+            let db = 25
+            this.bus.$emit(`${a}:setSize`, null, `${sizes[0] - da}px`)
+            this.bus.$emit(`${b}:setSize`, null, `${sizes[1] - db}px`)
+
         }
 
         get isAuthenticated(): boolean {
@@ -428,10 +470,10 @@
         }
 
         sanitize() {
-            let s = quote(this.initialState)
-            if (s !== this.initialState) {
-                this.initialState = s
-            }
+            // let s = quote(this.initialState)
+            // if (s !== this.initialState) {
+            //     this.initialState = s
+            // }
         }
 
         getFileNames(): string[] {
@@ -536,12 +578,11 @@
   }
 
   .app {
-    padding: 0 15px;
+    /*padding: 0 15px;*/
     position: relative;
-  }
-
-  .main {
-    padding-bottom: 210px;
+    font-family: $display_font;
+    width: 100%;
+    height: 100%;
   }
 
   .app-controls {
@@ -614,18 +655,14 @@
   }
 
   .header {
-    font-family: $display_font;
-    font-size: 0.9rem;
-    font-weight: 400;
-    text-transform: uppercase;
+    font-size: $header-font-size;
     width: 100%;
-    background: $heading_bg;
-    color: $heading_color;
-    height: 40px;
-    line-height: 40px;
+    background: transparent;
+    color: $lightest;
+    height: $header-height;
+    line-height: $header-height;
     padding: 0 20px;
     margin: 0;
-    border-bottom: solid 1px $dark;
     .icons {
       float: right;
       font-size: 0.8rem;
@@ -650,6 +687,36 @@
   @import "../../../node_modules/vue-multiselect/dist/vue-multiselect.min.css";
   @import '../../styles/theme';
 
+  $splitter-color: #5f81a4;
+  .splitter-pane-resizer {
+    background: $splitter-color !important;
+    &.horizontal, &.vertical {
+      z-index: 100 !important;;
+    }
+    &.horizontal {
+      width: 100% !important;
+      cursor: row-resize !important;
+      height: 3px !important;
+      border-bottom: solid 1px hsla(0, 0%, 100%, 0) !important;
+      border-top: solid 1px hsla(0, 0%, 100%, 0) !important;
+      margin-bottom: -1px !important;
+      margin-top: -1px !important;
+    }
+    &.vertical {
+      border-right: solid 1px hsla(0, 0%, 100%, 0) !important;
+      border-left: solid 1px hsla(0, 0%, 100%, 0) !important;
+      margin-left: -1px !important;
+      margin-right: -1px !important;
+      height: 100% !important;
+      cursor: col-resize !important;
+      width: 3px !important;
+    }
+  }
+
+  .splitter-pane {
+    overflow: hidden !important;
+  }
+
   .name > input.vlabeledit-input {
     text-transform: uppercase;
     font-weight: 200;
@@ -668,48 +735,46 @@
     font-family: $display_font;
   }
 
-  .app {
-    font-family: $display_font;
-  }
+  $nav-height: $header-height;
 
   .nav-tabs {
-    background: $heading_bg;
+    background: transparent;
     border: none;
-    border-bottom: solid 1px $dark;
-    height: 40px;
+    height: $nav-height;
   }
 
   .nav-tabs .nav-link {
     border: none;
-    height: 40px;
-    border-bottom: solid 1px $dark;
+    height: $nav-height;
     &:hover {
       border: none;
-      border-bottom: solid 1px $dark;
     }
   }
 
   .nav-tabs .nav-item {
     font-family: $display_font;
-    font-size: 0.9rem;
+    font-size: $header-font-size;
     font-weight: 400;
-    text-transform: uppercase;
+    line-height: $nav-height;
+    /*text-transform: uppercase;*/
     color: $heading_color;
-    background: $code_bg;
+    background: transparent;
     border: none;
     border-radius: 0;
   }
 
   .nav-tabs .nav-item .active {
     border-radius: 0;
-    background: lighten($code_bg, 10%);
-    color: lighten($text_color, 20%);
+    background: transparent;
+    color: $lightest;
     border: none;
-    border-bottom: solid 1px $dark;
     &:hover {
       border: none;
-      border-bottom: solid 1px $dark;
     }
+  }
+
+  .nav-link {
+    padding: 0 0.5rem;
   }
 
   .cm-s-initialCode,
@@ -719,17 +784,12 @@
   .cm-s-showCode,
   .cm-s-events {
     @extend %codemirror-common;
-    margin-bottom: 20px;
   }
 
   .repl-outer {
-    z-index: 10;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    height: 100%;
     background: black;
-    box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.75);
+    box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.5);
     button {
       &:first-child {
         margin-left: 20px;
@@ -741,7 +801,7 @@
 
   .repl-inner {
     padding: 20px;
-    height: 150px;
+    height: 100%;
   }
 
 </style>

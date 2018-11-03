@@ -219,8 +219,7 @@
   @import '../../styles/theme';
 
   input {
-    border: solid 1px $dark;
-    border-top: solid 1px $bg_color;
+    border: none;
     &:focus {
       box-shadow: inset 0 0 6px $highlight_color;
     }

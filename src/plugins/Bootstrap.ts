@@ -19,12 +19,23 @@
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-const webpack = require( 'webpack' )
 
-module.exports = config =>
-  config.when( process.env.NODE_ENV === 'production', config =>
-    config
-      .plugin( 'define' )
-      .use( webpack.DefinePlugin, {
-        'process.env': { NODE_ENV: '"production"' },
-      } ) )
+import { PluginObject } from "vue"
+
+type BootstrapOpts = {
+    components: {
+        [k in string]: string
+    }
+}
+
+const plugin: PluginObject<BootstrapOpts> = {
+    install(Vue, opts: BootstrapOpts) {
+        for (let [k, v] of Object.entries(opts.components)) {
+            let n1 = v.toLowerCase()
+            let mod = require(`bootstrap-vue/src/components/${n1}/${n1}`)
+            Vue.component(k, mod)
+        }
+    }
+}
+
+export default plugin

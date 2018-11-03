@@ -19,12 +19,7 @@
 //  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 //  USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-const webpack = require( 'webpack' )
-
-module.exports = config =>
-  config.when( process.env.NODE_ENV === 'production', config =>
-    config
-      .plugin( 'define' )
-      .use( webpack.DefinePlugin, {
-        'process.env': { NODE_ENV: '"production"' },
-      } ) )
+declare module "vue-split-pane" {
+    import Vue from "vue";
+    export default Vue;
+}

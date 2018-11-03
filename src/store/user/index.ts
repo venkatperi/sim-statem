@@ -47,7 +47,6 @@ const store: VuexModule = new VuexModule<UserState>({
 
         setUserProfile(state: UserState, profile: UserProfile) {
             state.name = profile.name
-            console.log(state)
         },
     },
 
